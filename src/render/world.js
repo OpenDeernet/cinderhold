@@ -216,12 +216,21 @@ export class World {
     this.hover.visible = false;
   }
 
+  // Places the camera so the whole board fits the viewport, whatever its
+  // aspect ratio, looking down at roughly 52 degrees.
   frameCamera() {
     const aspect = this.width / this.height;
-    const fit = Math.max(this.map.w / Math.max(aspect, 0.5), this.map.h * 1.2);
-    const dist = Math.min(this.controls.maxDistance, Math.max(12, fit * 1.3));
-    this.controls.target.set(0, 0, 0.6);
-    this.camera.position.set(0, dist * 0.82, dist * 0.62);
+    const vHalf = (this.camera.fov * Math.PI) / 360;
+    const hHalf = Math.atan(Math.tan(vHalf) * aspect);
+    const distW = (this.map.w / 2 + 0.8) / Math.tan(hHalf);
+    const distH = ((this.map.h / 2 + 1) / Math.tan(vHalf)) * 1.15;
+    const dist = Math.max(12, distW, distH) * 1.04;
+    this.controls.maxDistance = Math.max(32, dist * 1.3);
+    // On tall screens the HUD covers the bottom, so aim a little below the
+    // board centre to lift it up the screen.
+    const tz = aspect < 1 ? 0.4 + this.map.h * 0.3 * (1 - aspect) : 0.4;
+    this.controls.target.set(0, 0, tz);
+    this.camera.position.set(0, dist * 0.79, dist * 0.61 + tz);
     this.controls.update();
   }
 

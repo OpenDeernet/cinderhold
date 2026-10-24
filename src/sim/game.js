@@ -640,6 +640,13 @@ export class Game {
   }
 
   updateFlow(dt) {
+    // A wave counts as cleared once none of its enemies (or their splits)
+    // remain and it has nothing left to spawn.
+    let oldest = this.waveIndex;
+    for (const e of this.enemies) if (e.wave < oldest) oldest = e.wave;
+    for (const sp of this.spawners) if (sp.wave < oldest) oldest = sp.wave;
+    if (oldest > this.stats.wavesCleared) this.stats.wavesCleared = oldest;
+
     if (this.lives <= 0) {
       this.status = 'lost';
       this.emit({ type: 'lost' });
@@ -649,13 +656,11 @@ export class Game {
     const fieldClear = this.enemies.length === 0 && this.spawners.length === 0;
     if (!fieldClear) return;
     if (this.waveIndex >= this.totalWaves) {
-      this.stats.wavesCleared = this.waveIndex;
       this.status = 'won';
       this.emit({ type: 'won' });
       return;
     }
     if (this.countdown === null) {
-      this.stats.wavesCleared = this.waveIndex;
       this.countdown = AUTO_WAVE_DELAY;
       this.emit({ type: 'cleared', index: this.waveIndex - 1 });
     }

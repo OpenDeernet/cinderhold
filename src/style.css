@@ -1174,12 +1174,36 @@ button {
     flex-wrap: wrap;
   }
   .wave-box {
-    top: auto;
-    bottom: 96px;
+    top: 108px;
+  }
+  .wave-btn {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  .preview {
+    font-size: 12px;
+  }
+  .cards {
+    top: 108px;
+    width: min(250px, calc(100vw - 150px));
+  }
+  .card {
+    padding: 8px;
+  }
+  .card .icon.big {
+    width: 32px;
+    height: 32px;
+  }
+  .card-blurb {
+    display: none;
+  }
+  .build-bar {
+    gap: 4px;
+    padding: 4px;
   }
   .tower-btn {
-    width: 52px;
-    height: 60px;
+    width: 50px;
+    height: 58px;
   }
   .tower-btn .icon {
     width: 28px;

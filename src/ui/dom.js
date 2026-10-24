@@ -44,6 +44,16 @@ export function clear(el) {
   return el;
 }
 
+// Like el.append(), but skips null/false instead of printing them.
+export function fill(el, ...children) {
+  clear(el);
+  for (const c of children.flat(Infinity)) {
+    if (c === null || c === undefined || c === false) continue;
+    el.append(c);
+  }
+  return el;
+}
+
 export function fmtTime(sec) {
   const s = Math.max(0, Math.floor(sec));
   const m = Math.floor(s / 60);

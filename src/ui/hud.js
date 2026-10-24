@@ -1,7 +1,7 @@
 import { TOWERS, TOWER_ORDER } from '../sim/data/towers.js';
 import { ENEMIES } from '../sim/data/enemies.js';
 import { waveSummary } from '../sim/waves.js';
-import { clear, h, icon } from './dom.js';
+import { clear, fill, h, icon } from './dom.js';
 
 const MODE_LABEL = { first: 'First', last: 'Last', strong: 'Strongest', close: 'Closest' };
 
@@ -153,7 +153,7 @@ export class Hud {
     else label = 'Send next wave early';
     const bonus = this.bonusPreview(g);
     set('waveBtn', `${label}|${bonus}|${done}`, () => {
-      clear(this.waveBtn).append(
+      fill(this.waveBtn,
         h('span.wave-label', label),
         !done ? h('span.wave-key', 'Space') : null,
         bonus > 0 ? h('span.bonus', `+${bonus}`, icon('coin', 'icon tiny')) : null,
@@ -191,7 +191,7 @@ export class Hud {
     if (!this.game) return;
     const t = TOWERS[type];
     const s = this.game.towerStats(type, 0);
-    clear(this.tip).append(
+    fill(this.tip,
       h('div.tip-head', icon(type, 'icon'), h('div', h('div.tip-name', t.name), h('div.tip-cost', icon('coin', 'icon tiny'), String(this.game.buildCost(type))))),
       h('div.tip-blurb', t.blurb),
       h('table.tip-stats', statLines(type, s).map(([k, v]) => h('tr', h('td', k), h('td', v)))),
@@ -239,7 +239,7 @@ export class Hud {
       }
       return h('tr', h('td', k), h('td', v, delta));
     });
-    clear(this.panel).append(
+    fill(this.panel,
       h('div.panel-top',
         icon(t.type, 'icon'),
         h('div', h('div.tp-name', def.name), h('div.pips', [0, 1, 2].map((i) => h(`span.pip${i <= t.tier ? '.on' : ''}`)))),

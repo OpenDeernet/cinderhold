@@ -86,6 +86,21 @@ describe('combat', () => {
     expect(g.stars()).toBe(3);
   });
 
+  it('counts cleared waves even when they overlap', () => {
+    const g = new Game({ level: { ...TEST_LEVEL, waves: 4 } });
+    for (let c = 1; c < 9; c++) g.build('tesla', c, 0);
+    g.callWave();
+    g.callWave();
+    g.callWave();
+    expect(g.stats.wavesCleared).toBe(0);
+    for (let i = 0; i < 9000 && g.countdown === null && !g.isOver(); i++) g.update(TICK);
+    expect(g.stats.wavesCleared).toBe(3);
+    g.callWave();
+    run(g, 300);
+    expect(g.status).toBe('won');
+    expect(g.stats.wavesCleared).toBe(4);
+  });
+
   it('loses lives when enemies reach the Hold and ends at zero', () => {
     const g = new Game({ level: { ...TEST_LEVEL, lives: 3 } });
     g.callWave();

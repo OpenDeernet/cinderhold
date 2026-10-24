@@ -4,7 +4,7 @@ import { TOWERS, TOWER_ORDER, towerTier } from '../sim/data/towers.js';
 import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
 import { DIFFICULTY } from '../sim/game.js';
 import { THEMES } from '../render/themes.js';
-import { clear, fmtTime, h, icon } from './dom.js';
+import { clear, fill, fmtTime, h, icon } from './dom.js';
 
 const THEME_NAMES = {
   meadow: 'Meadow', autumn: 'Autumn', desert: 'Desert', snow: 'Snow', swamp: 'Fen', volcanic: 'Caldera',
@@ -205,7 +205,7 @@ export class Screens {
     const list = h('div.perk-list');
     const head = h('div.pill');
     const render = () => {
-      clear(head).append(icon('star', 'icon tiny'), ` ${s.starsFree()} free of ${s.starsEarned()}`);
+      fill(head,icon('star', 'icon tiny'), ` ${s.starsFree()} free of ${s.starsEarned()}`);
       clear(list);
       for (const p of PERKS) {
         const owned = s.hasPerk(p.id);

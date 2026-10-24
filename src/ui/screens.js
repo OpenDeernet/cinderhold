@@ -1,0 +1,435 @@
+import { LEVELS } from '../sim/data/levels.js';
+import { PERKS } from '../sim/data/perks.js';
+import { TOWERS, TOWER_ORDER, towerTier } from '../sim/data/towers.js';
+import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
+import { DIFFICULTY } from '../sim/game.js';
+import { THEMES } from '../render/themes.js';
+import { clear, fmtTime, h, icon } from './dom.js';
+
+const THEME_NAMES = {
+  meadow: 'Meadow', autumn: 'Autumn', desert: 'Desert', snow: 'Snow', swamp: 'Fen', volcanic: 'Caldera',
+};
+
+const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
+
+// Full-screen menus: title, level select, perks, codex, settings, help,
+// pause and the end-of-battle report.
+export class Screens {
+  constructor(container, ctx) {
+    this.el = container;
+    this.ctx = ctx;
+    this.current = null;
+  }
+
+  get save() {
+    return this.ctx.save;
+  }
+
+  click() {
+    this.ctx.audio.unlock();
+    this.ctx.audio.play('click');
+  }
+
+  btn(label, onclick, cls = '') {
+    return h(`button.btn${cls ? '.' + cls : ''}`, {
+      onclick: (e) => {
+        this.click();
+        onclick(e);
+      },
+    }, label);
+  }
+
+  hide() {
+    clear(this.el);
+    this.el.hidden = true;
+    this.current = null;
+  }
+
+  mount(name, node, { dim = true } = {}) {
+    clear(this.el);
+    this.el.hidden = false;
+    this.el.className = dim ? 'screens dim' : 'screens';
+    this.el.appendChild(node);
+    this.current = name;
+    const first = node.querySelector('button:not([disabled])');
+    if (first && !matchMedia('(pointer: coarse)').matches) first.focus({ preventScroll: true });
+  }
+
+  // ---------------------------------------------------------------- title
+
+  title() {
+    const s = this.save;
+    const a = this.ctx.actions;
+    const stars = s.starsEarned();
+    const node = h('div.title-screen',
+      h('div.logo',
+        h('div.logo-mark', icon('ember', 'logo-icon')),
+        h('h1', 'Cinderhold'),
+        h('p.tagline', 'Hold the line against the ash tide'),
+      ),
+      h('div.menu',
+        this.btn(s.starsEarned() ? 'Continue Campaign' : 'Begin Campaign', () => this.levels(), 'primary'),
+        this.btn(s.endlessUnlocked() ? 'Endless Siege' : 'Endless Siege (clear level 3)', () => this.endless(), s.endlessUnlocked() ? '' : 'locked'),
+        this.btn(h('span', 'War Council ', h('span.pill', icon('star', 'icon tiny'), ` ${s.starsFree()}/${stars}`)), () => this.perks()),
+        this.btn('Codex', () => this.codex()),
+        this.btn('Settings', () => this.settings(() => this.title())),
+        this.btn('How to Play', () => this.help(() => this.title())),
+      ),
+      h('div.footer', `Played ${fmtTime(s.data.playSeconds)}  ·  v1.0  ·  `, h('a', { href: '#', onclick: (e) => { e.preventDefault(); this.credits(); } }, 'Credits')),
+    );
+    a.onTitle();
+    this.mount('title', node, { dim: false });
+  }
+
+  credits() {
+    this.mount('credits', h('div.panel.narrow',
+      h('h2', 'Credits'),
+      h('p', 'Cinderhold — design, code, models, sound and music by Fredrik Ahman.'),
+      h('p', 'Every model is built from primitives in code, every sound is synthesised live with the Web Audio API, and the icons are hand-written SVG. Rendering by Three.js.'),
+      h('p.muted', 'Released under the MIT license.'),
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  // ---------------------------------------------------------------- level select
+
+  levels() {
+    const s = this.save;
+    const grid = h('div.level-grid');
+    LEVELS.forEach((level, idx) => {
+      const rec = s.level(level.id);
+      const unlocked = s.isUnlocked(idx);
+      const theme = THEMES[level.theme];
+      const card = h('button.level-card', {
+        disabled: !unlocked,
+        style: { '--swatch': hex(theme.ground), '--swatch2': hex(theme.road), '--sky': hex(theme.sky) },
+        onclick: () => {
+          this.click();
+          this.briefing(idx);
+        },
+      },
+      h('div.level-num', String(idx + 1)),
+      h('div.level-info',
+        h('div.level-name', unlocked ? level.name : 'Locked'),
+        h('div.level-meta', `${THEME_NAMES[level.theme]} · ${level.waves} waves${level.bosses ? ' · boss' : ''}`),
+      ),
+      h('div.level-stars', [0, 1, 2].map((i) => icon('star', `icon star ${i < rec.stars ? 'on' : 'off'}`)),
+        rec.heroic ? h('span.laurel', { title: 'Beaten on Heroic' }, '✦') : null),
+      );
+      grid.appendChild(card);
+    });
+    this.mount('levels', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'Campaign'), h('div.pill', icon('star', 'icon tiny'), ` ${s.starsEarned()} / ${LEVELS.length * 3}`)),
+      grid,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  difficultyPicker() {
+    const s = this.save;
+    const wrap = h('div.seg');
+    const render = () => {
+      clear(wrap);
+      for (const [id, d] of Object.entries(DIFFICULTY)) {
+        wrap.appendChild(h(`button.seg-btn${s.data.difficulty === id ? '.on' : ''}`, {
+          onclick: () => {
+            this.click();
+            s.data.difficulty = id;
+            s.persist();
+            render();
+          },
+        }, d.label));
+      }
+    };
+    render();
+    return wrap;
+  }
+
+  briefing(idx) {
+    const level = LEVELS[idx];
+    const rec = this.save.level(level.id);
+    const newTowers = level.towers.filter((t) => idx === 0 || !LEVELS[idx - 1].towers.includes(t));
+    const newEnemies = level.pool.map((p) => p.type).filter((t) => idx === 0 || !LEVELS[idx - 1].pool.some((p) => p.type === t));
+    const bosses = [...new Set((level.bosses || []).map((b) => b.type))];
+    this.mount('briefing', h('div.panel.narrow',
+      h('div.kicker', `Level ${idx + 1}`),
+      h('h2', level.name),
+      h('p.intro', level.intro),
+      newTowers.length ? h('div.chips', h('span.chip-label', 'New towers'), newTowers.map((t) => h('span.chip', icon(t, 'icon small'), TOWERS[t].name))) : null,
+      newEnemies.length ? h('div.chips', h('span.chip-label', 'New enemies'), newEnemies.map((t) => h('span.chip', icon(t, 'icon small'), ENEMIES[t].name))) : null,
+      bosses.length ? h('div.chips', h('span.chip-label.boss', 'Boss'), bosses.map((t) => h('span.chip.boss', icon(t, 'icon small'), ENEMIES[t].name))) : null,
+      h('div.brief-stats', `${level.waves} waves · ${level.startGold} starting gold · ${this.save.data.perks.length} perks active`),
+      h('div.label', 'Difficulty'),
+      this.difficultyPicker(),
+      rec.stars ? h('div.muted', `Best: ${rec.stars} star${rec.stars > 1 ? 's' : ''}${rec.heroic ? ', Heroic cleared' : ''}`) : null,
+      h('div.row',
+        this.btn('Back', () => this.levels()),
+        this.btn('Defend', () => this.ctx.actions.startLevel(idx, this.save.data.difficulty, false), 'primary'),
+      ),
+    ));
+  }
+
+  endless() {
+    const s = this.save;
+    if (!s.endlessUnlocked()) {
+      this.ctx.audio.play('error');
+      return;
+    }
+    const grid = h('div.level-grid');
+    LEVELS.forEach((level, idx) => {
+      if (!s.isUnlocked(idx) || !s.level(level.id).stars) return;
+      const best = s.level(level.id).bestEndless || 0;
+      grid.appendChild(h('button.level-card', {
+        style: { '--swatch': hex(THEMES[level.theme].ground), '--swatch2': hex(THEMES[level.theme].road) },
+        onclick: () => {
+          this.click();
+          this.ctx.actions.startLevel(idx, 'normal', true);
+        },
+      },
+      h('div.level-num', String(idx + 1)),
+      h('div.level-info', h('div.level-name', level.name), h('div.level-meta', best ? `Best: wave ${best}` : 'Not attempted')),
+      ));
+    });
+    this.mount('endless', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'Endless Siege')),
+      h('p.muted', 'Every tower, every enemy, no end. Waves grow tougher forever; how long can the Hold stand? Perks apply.'),
+      grid,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  // ---------------------------------------------------------------- perks
+
+  perks() {
+    const s = this.save;
+    const list = h('div.perk-list');
+    const head = h('div.pill');
+    const render = () => {
+      clear(head).append(icon('star', 'icon tiny'), ` ${s.starsFree()} free of ${s.starsEarned()}`);
+      clear(list);
+      for (const p of PERKS) {
+        const owned = s.hasPerk(p.id);
+        const afford = s.starsFree() >= p.cost;
+        list.appendChild(h(`button.perk${owned ? '.owned' : ''}${!owned && !afford ? '.poor' : ''}`, {
+          onclick: () => {
+            if (s.togglePerk(p.id)) {
+              this.ctx.audio.unlock();
+              this.ctx.audio.play(owned ? 'sell' : 'upgrade');
+            } else this.ctx.audio.play('error');
+            render();
+          },
+        },
+        h('div.perk-cost', String(p.cost), icon('star', 'icon tiny')),
+        h('div.perk-body', h('div.perk-name', p.name), h('div.perk-blurb', p.blurb)),
+        h('div.perk-state', owned ? 'Active' : afford ? 'Adopt' : '—'),
+        ));
+      }
+    };
+    render();
+    this.mount('perks', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'War Council'), head),
+      h('p.muted', 'Spend stars on lasting advantages. Stars are never lost: click an active perk to refund it.'),
+      list,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  // ---------------------------------------------------------------- codex
+
+  codex(tab = 'towers') {
+    const seen = new Set(this.save.data.seen);
+    const body = h('div.codex');
+    if (tab === 'towers') {
+      for (const id of TOWER_ORDER) {
+        const t = TOWERS[id];
+        const s0 = towerTier(id, 0);
+        const s2 = towerTier(id, 2);
+        body.appendChild(h('div.codex-card',
+          icon(id, 'icon big'),
+          h('div',
+            h('div.codex-name', t.name),
+            h('div.codex-blurb', t.blurb),
+            h('div.codex-stats',
+              `Cost ${s0.cost} · Damage ${s0.damage}→${s2.damage} · Range ${s0.range}→${s2.range} · `,
+              `${t.hitsAir ? (t.hitsGround ? 'Ground & air' : 'Air') : 'Ground only'} · ${t.damageType === 'energy' ? 'Ignores armor' : 'Physical'}`,
+            ),
+          ),
+        ));
+      }
+    } else {
+      for (const id of ENEMY_ORDER) {
+        const e = ENEMIES[id];
+        const known = seen.has(id);
+        body.appendChild(h(`div.codex-card${known ? '' : '.unknown'}`,
+          icon(id, 'icon big'),
+          h('div',
+            h('div.codex-name', known ? e.name : '???'),
+            h('div.codex-blurb', known ? e.blurb : 'Not yet encountered.'),
+            known ? h('div.codex-stats',
+              `Health ${e.hp}${e.shield ? ` + ${e.shield} shield` : ''}${e.armor ? ` · Armor ${e.armor}` : ''} · Speed ${e.speed} · `,
+              `Bounty ${e.bounty} · Costs ${e.lives} ${e.lives > 1 ? 'lives' : 'life'}${e.air ? ' · Flying' : ''}`,
+            ) : null,
+          ),
+        ));
+      }
+    }
+    const tabs = h('div.seg',
+      h(`button.seg-btn${tab === 'towers' ? '.on' : ''}`, { onclick: () => { this.click(); this.codex('towers'); } }, 'Towers'),
+      h(`button.seg-btn${tab === 'enemies' ? '.on' : ''}`, { onclick: () => { this.click(); this.codex('enemies'); } }, 'Enemies'),
+    );
+    this.mount('codex', h('div.panel.wide', h('div.panel-head', h('h2', 'Codex'), tabs), body, h('div.row', this.btn('Back', () => this.title()))));
+  }
+
+  // ---------------------------------------------------------------- settings & help
+
+  settings(back) {
+    const s = this.save.settings;
+    const apply = () => {
+      this.save.persist();
+      this.ctx.actions.applySettings();
+    };
+    const slider = (label, key) => h('label.setting', h('span', label),
+      h('input', {
+        type: 'range', min: 0, max: 1, step: 0.05, value: s[key],
+        oninput: (e) => {
+          s[key] = Number(e.target.value);
+          apply();
+        },
+      }));
+    const quality = h('div.seg');
+    const renderQ = () => {
+      clear(quality);
+      for (const q of ['low', 'medium', 'high']) {
+        quality.appendChild(h(`button.seg-btn${s.quality === q ? '.on' : ''}`, {
+          onclick: () => {
+            this.click();
+            s.quality = q;
+            apply();
+            renderQ();
+          },
+        }, q[0].toUpperCase() + q.slice(1)));
+      }
+    };
+    renderQ();
+    const check = (label, key) => h('label.setting.check', h('span', label), h('input', {
+      type: 'checkbox', checked: s[key],
+      onchange: (e) => {
+        s[key] = e.target.checked;
+        apply();
+      },
+    }));
+    this.mount('settings', h('div.panel.narrow',
+      h('h2', 'Settings'),
+      slider('Master volume', 'master'),
+      slider('Music', 'music'),
+      slider('Effects', 'sfx'),
+      check('Mute all (M)', 'muted'),
+      h('div.setting', h('span', 'Graphics'), quality),
+      check('Show frame rate', 'showFps'),
+      h('div.row',
+        this.btn('Reset progress', () => this.confirmReset(back), 'danger'),
+        this.btn('Done', back, 'primary'),
+      ),
+    ));
+  }
+
+  confirmReset(back) {
+    this.mount('reset', h('div.panel.narrow',
+      h('h2', 'Reset progress?'),
+      h('p', 'This erases every star, perk and record. Settings are kept.'),
+      h('div.row',
+        this.btn('Cancel', () => this.settings(back)),
+        this.btn('Erase everything', () => {
+          this.save.reset();
+          this.title();
+        }, 'danger'),
+      ),
+    ));
+  }
+
+  help(back) {
+    const row = (k, v) => h('tr', h('td.key', k), h('td', v));
+    this.mount('help', h('div.panel.narrow',
+      h('h2', 'How to Play'),
+      h('p', 'Enemies march along the road from the burning portals to your Hold. Every one that gets through costs lives; lose them all and the Hold falls. Build towers on open ground beside the road, earn gold from kills and spend it on more towers and upgrades.'),
+      h('table.keys',
+        row('Left click', 'Build / select a tower'),
+        row('1 – 6', 'Choose a tower to build'),
+        row('Shift + click', 'Keep building the same tower'),
+        row('Right drag', 'Rotate the camera'),
+        row('Wheel / pinch', 'Zoom'),
+        row('Middle drag, WASD, arrows', 'Pan'),
+        row('Space', 'Send the next wave (early waves pay a bonus)'),
+        row('U / X / T', 'Upgrade / sell / change targeting of the selected tower'),
+        row('F', 'Cycle game speed'),
+        row('Esc or P', 'Cancel / pause'),
+      ),
+      h('p.muted', 'Tips: cannons and mortars cannot hit fliers. Armor blunts darts and shells, but fire and lightning ignore it. Kill Menders first. Rime Spires make everything else better.'),
+      h('div.row', this.btn('Back', back, 'primary')),
+    ));
+  }
+
+  // ---------------------------------------------------------------- in-battle
+
+  pause(game) {
+    const a = this.ctx.actions;
+    this.mount('pause', h('div.panel.narrow',
+      h('h2', 'Paused'),
+      h('p.muted', `${game.level.name} · ${game.endless ? 'Endless' : DIFFICULTY[game.difficulty].label} · wave ${game.waveIndex}${game.endless ? '' : ` of ${game.totalWaves}`}`),
+      h('div.menu',
+        this.btn('Resume', () => a.resume(), 'primary'),
+        this.btn('Restart battle', () => a.restart()),
+        this.btn('Settings', () => this.settings(() => this.pause(game))),
+        this.btn('How to Play', () => this.help(() => this.pause(game))),
+        this.btn('Abandon battle', () => a.quitToMenu()),
+      ),
+    ));
+  }
+
+  result(game, outcome) {
+    const a = this.ctx.actions;
+    const idx = game.levelIdx;
+    const won = game.status === 'won';
+    const st = game.stats;
+    const stars = h('div.result-stars');
+    if (won) {
+      for (let i = 0; i < 3; i++) {
+        const img = icon('star', `icon star big ${i < game.stars() ? 'on' : 'off'}`);
+        img.style.animationDelay = `${0.25 + i * 0.25}s`;
+        stars.appendChild(img);
+      }
+    }
+    const next = idx + 1 < LEVELS.length && this.save.isUnlocked(idx + 1) && !game.endless;
+    const lines = [
+      ['Waves cleared', game.endless ? String(st.wavesCleared) : `${st.wavesCleared} / ${game.totalWaves}`],
+      ['Enemies slain', String(st.kills)],
+      ['Leaks', String(st.leaks)],
+      ['Gold earned', String(st.goldEarned)],
+      ['Towers built', String(st.built)],
+      ['Battle time', fmtTime(game.time)],
+    ];
+    let title;
+    if (game.endless) title = 'The Hold has fallen';
+    else title = won ? (game.levelIdx === LEVELS.length - 1 ? 'The ash tide is broken' : 'Victory') : 'The Hold has fallen';
+    const notes = [];
+    if (outcome?.newStars > 0) notes.push(`+${outcome.newStars} star${outcome.newStars > 1 ? 's' : ''} for the War Council`);
+    if (outcome?.firstWin && next) notes.push(`${LEVELS[idx + 1].name} unlocked`);
+    if (outcome?.firstWin && idx === 2) notes.push('Endless Siege unlocked');
+    if (outcome?.heroic) notes.push('Heroic victory recorded');
+    if (outcome?.newBest) notes.push('New endless record!');
+    this.mount('result', h(`div.panel.narrow.result.${won ? 'won' : 'lost'}`,
+      h('h2', title),
+      stars,
+      won && game.levelIdx === LEVELS.length - 1 && !game.endless
+        ? h('p.intro', 'The furnace at the heart of the ash has gone cold. The valley will remember who held the line.')
+        : null,
+      notes.length ? h('div.notes', notes.map((n) => h('div', n))) : null,
+      h('table.stats', lines.map(([k, v]) => h('tr', h('td', k), h('td', v)))),
+      h('div.row',
+        this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(game.endless ? 'endless' : 'levels')),
+        this.btn(won ? 'Replay' : 'Try again', () => a.restart(), won && next ? '' : 'primary'),
+        won && next ? this.btn('Next battle', () => this.briefing(idx + 1), 'primary') : null,
+      ),
+    ));
+  }
+}

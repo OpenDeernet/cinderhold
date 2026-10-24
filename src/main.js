@@ -360,6 +360,13 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// HUD buttons must not keep keyboard focus: Space would otherwise both fire
+// the shortcut and activate the focused button.
+document.getElementById('hud').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) b.blur();
+});
+
 window.addEventListener('keyup', (e) => {
   if (PAN_KEYS[e.code]) world.setPanKey(PAN_KEYS[e.code], false);
 });
@@ -384,6 +391,22 @@ canvas.addEventListener('webglcontextlost', (e) => {
 
 // ---------------------------------------------------------------- loop
 
+// If a battle runs well below 35 fps for several seconds, step graphics
+// quality down once per level of quality so slower machines stay playable.
+let slowFor = 0;
+function adaptQuality(dt) {
+  if (session.paused || document.hidden) return;
+  slowFor = fpsAvg < 35 ? slowFor + dt : 0;
+  if (slowFor < 6) return;
+  slowFor = 0;
+  const next = { high: 'medium', medium: 'low' }[save.settings.quality];
+  if (!next) return;
+  save.settings.quality = next;
+  save.persist();
+  world.setQuality(next);
+  hud.toast(`Graphics set to ${next} to keep things smooth`);
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   const realDt = Math.min(0.1, (now - lastFrame) / 1000);
@@ -405,6 +428,7 @@ function frame(now) {
   }
   handleEvents(g.drainEvents());
   if (!session.demo) {
+    adaptQuality(realDt);
     const busy = g.enemies.length + g.spawners.length;
     const boss = g.enemies.some((e) => e.boss);
     audio.setIntensity(boss ? 1 : busy > 0 ? 0.7 : 0.2);

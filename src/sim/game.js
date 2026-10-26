@@ -125,6 +125,8 @@ export class Game {
     if ((type === 'cannon' || type === 'mortar') && this.perks.has('powder')) s.splash *= 1.15;
     if (type === 'frost' && this.perks.has('rime')) s.slowTime *= 1.4;
     if (type === 'tesla' && this.perks.has('overcharge')) s.chains += 1;
+    if (type === 'ember' && this.perks.has('kindling')) s.burn *= 1.25;
+    if (this.perks.has('spyglass')) s.range *= 1.08;
     return s;
   }
 

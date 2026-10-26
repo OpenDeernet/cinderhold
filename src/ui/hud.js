@@ -6,7 +6,8 @@ import { clear, fill, h, icon } from './dom.js';
 const MODE_LABEL = { first: 'First', last: 'Last', strong: 'Strongest', close: 'Closest' };
 
 function fmt(n) {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+  const r = Math.round(n * 10) / 10;
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
 
 function statLines(type, s) {
@@ -15,7 +16,7 @@ function statLines(type, s) {
   if (s.splash) lines.push(['Blast', fmt(s.splash)]);
   if (s.slow) lines.push(['Slow', `${Math.round((1 - s.slow) * 100)}% · ${fmt(s.slowTime)}s`]);
   if (s.chains) lines.push(['Arcs', String(s.chains)]);
-  if (s.burn) lines.push(['Burn', `${s.burn}/s`]);
+  if (s.burn) lines.push(['Burn', `${Math.round(s.burn)}/s`]);
   if (s.minRange) lines.push(['Min range', fmt(s.minRange)]);
   lines.push(['Targets', def.hitsAir ? (def.hitsGround ? 'Ground & air' : 'Air') : 'Ground']);
   return lines;

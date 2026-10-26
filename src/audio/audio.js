@@ -299,9 +299,20 @@ export class Audio {
     this.pendingTheme = theme;
     if (!this.ctx) return;
     if (this.musicTheme === theme) return;
-    this.musicTheme = theme;
-    this.step = 0;
-    this.nextTime = this.ctx.currentTime + 0.1;
+    const first = !this.musicTheme;
+    const t = this.ctx.currentTime;
+    const level = this.settings.music * 0.55;
+    // Fade the old track out, switch, then fade the new one in.
+    this.musicBus.gain.cancelScheduledValues(t);
+    this.musicBus.gain.setTargetAtTime(0, t, 0.12);
+    clearTimeout(this.fadeTimer);
+    this.fadeTimer = setTimeout(() => {
+      this.musicTheme = theme;
+      this.step = 0;
+      this.nextTime = this.ctx.currentTime + 0.05;
+      this.musicBus.gain.setTargetAtTime(this.settings.music * 0.55, this.ctx.currentTime, 0.4);
+    }, first ? 0 : 450);
+    if (first) this.musicBus.gain.setTargetAtTime(level, t, 0.4);
   }
 
   setIntensity(v) {

@@ -459,6 +459,10 @@ function frame(now) {
   handleEvents(g.drainEvents());
   if (!session.demo) {
     adaptQuality(realDt);
+    // Tick through the last three seconds before an automatic wave.
+    const secs = g.countdown === null ? null : Math.ceil(g.countdown);
+    if (secs !== null && secs <= 3 && secs !== session.lastTick && !session.paused) audio.play('tick');
+    session.lastTick = secs;
     const busy = g.enemies.length + g.spawners.length;
     const boss = g.enemies.some((e) => e.boss);
     audio.setIntensity(boss ? 1 : busy > 0 ? 0.7 : 0.2);

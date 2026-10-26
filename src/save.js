@@ -10,7 +10,7 @@ export const DEFAULT_SETTINGS = {
   muted: false,
   quality: 'high',
   showFps: false,
-  edgeHints: true,
+  reduceMotion: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
 };
 
 function fresh() {

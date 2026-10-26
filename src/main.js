@@ -79,6 +79,7 @@ const actions = {
   },
   applySettings: () => {
     audio.applyVolumes();
+    world.reduceMotion = save.settings.reduceMotion;
     if (world.quality !== save.settings.quality) world.setQuality(save.settings.quality);
   },
   tutorialDone: () => {
@@ -86,6 +87,8 @@ const actions = {
     save.persist();
   },
 };
+
+world.reduceMotion = save.settings.reduceMotion;
 
 const ctx = { save, audio, actions };
 const hud = new Hud(document.getElementById('hud'), ctx);

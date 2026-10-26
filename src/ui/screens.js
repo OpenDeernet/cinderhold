@@ -336,6 +336,7 @@ export class Screens {
       slider('Effects', 'sfx'),
       check('Mute all (M)', 'muted'),
       h('div.setting', h('span', 'Graphics'), quality),
+      check('Reduce motion (no screen shake or flashes)', 'reduceMotion'),
       check('Show frame rate', 'showFps'),
       h('div.row',
         this.btn('Reset progress', () => this.confirmReset(back), 'danger'),

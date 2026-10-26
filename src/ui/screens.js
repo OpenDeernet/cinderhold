@@ -406,6 +406,7 @@ export class Screens {
         row('Wheel / pinch', 'Zoom'),
         row('Middle drag, WASD, arrows', 'Pan'),
         row('C or Home', 'Reset the camera'),
+        row('R', 'Show every tower\'s range'),
         row('Space', 'Send the next wave (early waves pay a bonus)'),
         row('U / X / T', 'Upgrade / sell / change targeting of the selected tower'),
         row('F', 'Cycle game speed'),

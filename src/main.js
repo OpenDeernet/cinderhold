@@ -383,6 +383,10 @@ window.addEventListener('keydown', (e) => {
     case 'KeyF':
       session.speed = (session.speed % 3) + 1;
       break;
+    case 'KeyR':
+      world.setShowRanges(!world.showRanges);
+      hud.toast(world.showRanges ? 'Showing all tower ranges' : 'Tower ranges hidden');
+      break;
     case 'KeyC':
     case 'Home':
       world.frameCamera();

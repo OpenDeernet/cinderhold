@@ -215,6 +215,7 @@ export class World {
     this.floats.clear();
     this.setGhost(null);
     this.setSelected(null);
+    this.setShowRanges(false);
     this.hover.visible = false;
   }
 
@@ -474,6 +475,32 @@ export class World {
       ring.fill.material.color.set(color);
     }
     ring.root.visible = true;
+  }
+
+  // Range rings for every tower at once (R), to spot gaps in coverage.
+  setShowRanges(on) {
+    this.showRanges = on;
+    if (!this.rangePool) this.rangePool = [];
+    if (!on) for (const r of this.rangePool) r.root.visible = false;
+  }
+
+  updateRanges(game) {
+    if (!this.showRanges) return;
+    let i = 0;
+    for (const t of game.towers) {
+      let ring = this.rangePool[i];
+      if (!ring) {
+        ring = makeRangeRing();
+        ring.ring.material.opacity = 0.35;
+        ring.fill.material.opacity = 0.04;
+        this.scene.add(ring.root);
+        this.rangePool.push(ring);
+      }
+      const { x, z } = this.toWorld(t.x, t.y);
+      this.showRing(ring, x, z, t.s.range, TOWER_COLORS[t.type]);
+      i++;
+    }
+    for (; i < this.rangePool.length; i++) this.rangePool[i].root.visible = false;
   }
 
   setSelected(tower) {
@@ -867,6 +894,7 @@ export class World {
         if (!game.towers.includes(this.selected)) this.setSelected(null);
         else this.setSelected(this.selected);
       }
+      this.updateRanges(game);
       this.ambient(dt);
       this.routePreview(dt, game);
       this.shakeBoard(dt);

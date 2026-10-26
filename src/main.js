@@ -317,6 +317,9 @@ window.addEventListener('keydown', (e) => {
     if (session && !session.demo) hud.toast(save.settings.muted ? 'Sound off' : 'Sound on');
     return;
   }
+  if (e.code === 'Escape' && screens.current && screens.current !== 'title' && screens.current !== 'result') {
+    if (screens.back()) return;
+  }
   if (!session || session.demo) return;
   if (PAN_KEYS[e.code] && !session.paused) {
     world.setPanKey(PAN_KEYS[e.code], true);

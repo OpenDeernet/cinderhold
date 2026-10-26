@@ -63,6 +63,7 @@ browser's localStorage.
 | U / X / T | Upgrade / sell / cycle targeting of the selected tower |
 | F | Cycle game speed |
 | Esc / P | Cancel, deselect, pause |
+| G | Toggle fullscreen |
 | M | Mute |
 
 Touch: tap to build or select, one-finger drag pans, two fingers zoom and

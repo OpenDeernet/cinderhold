@@ -5,7 +5,7 @@ import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
 import { DIFFICULTY } from '../sim/game.js';
 import { THEMES } from '../render/themes.js';
 import { FEATS } from '../achievements.js';
-import { clear, fill, fmtTime, h, icon } from './dom.js';
+import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
 const THEME_NAMES = {
   meadow: 'Meadow', autumn: 'Autumn', desert: 'Desert', snow: 'Snow', swamp: 'Fen', volcanic: 'Caldera',
@@ -407,6 +407,7 @@ export class Screens {
         row('Middle drag, WASD, arrows', 'Pan'),
         row('C or Home', 'Reset the camera'),
         row('R', 'Show every tower\'s range'),
+        row('G', 'Toggle fullscreen'),
         row('Space', 'Send the next wave (early waves pay a bonus)'),
         row('U / X / T', 'Upgrade / sell / change targeting of the selected tower'),
         row('F', 'Cycle game speed'),
@@ -428,6 +429,7 @@ export class Screens {
         this.btn('Resume', () => a.resume(), 'primary'),
         this.btn('Restart battle', () => a.restart()),
         this.btn('Settings', () => this.settings(() => this.pause(game))),
+        document.fullscreenEnabled ? this.btn('Toggle fullscreen (G)', () => toggleFullscreen()) : null,
         this.btn('How to Play', () => this.help(() => this.pause(game))),
         this.btn('Abandon battle', () => a.quitToMenu()),
       ),

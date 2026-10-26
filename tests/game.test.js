@@ -77,6 +77,13 @@ describe('economy', () => {
     expect(g.gold - before).toBe(Math.floor(t.invested * 0.85));
   });
 
+  it('applies range and burn perks', () => {
+    const g = new Game({ level: TEST_LEVEL, perks: ['spyglass', 'kindling'] });
+    expect(g.towerStats('bolt', 0).range).toBeCloseTo(3.24);
+    expect(g.towerStats('ember', 0).burn).toBeCloseTo(12.5);
+    expect(g.towerStats('ember', 0).range).toBeCloseTo(1.9 * 1.08);
+  });
+
   it('pays a bonus for calling a wave early', () => {
     const g = new Game({ level: { ...TEST_LEVEL, waves: 3 } });
     g.build('tesla', 3, 0);

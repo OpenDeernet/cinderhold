@@ -11,6 +11,8 @@ export const PERKS = [
   { id: 'overcharge', name: 'Overcharge', cost: 3, blurb: 'Storm Coil arcs jump to one more enemy.' },
   { id: 'bounty', name: 'Bounty Hunters', cost: 3, blurb: 'Enemies drop 10% more gold.' },
   { id: 'bugle', name: 'Early Bugle', cost: 2, blurb: 'Calling a wave early pays double.' },
+  { id: 'spyglass', name: 'Spyglasses', cost: 4, blurb: 'Every tower reaches 8% farther.' },
+  { id: 'kindling', name: 'Dry Kindling', cost: 2, blurb: 'Cinder Brazier burns 25% hotter.' },
 ];
 
 export function perkById(id) {

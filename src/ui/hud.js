@@ -293,6 +293,16 @@ export class Hud {
     setTimeout(() => card.remove(), 9600);
   }
 
+  featCard(feat) {
+    const card = h('div.card.feat', { onclick: () => card.remove() },
+      icon('star', 'icon big'),
+      h('div', h('div.card-kicker', 'Feat earned'), h('div.card-name', feat.name), h('div.card-blurb', feat.blurb)),
+    );
+    this.cards.appendChild(card);
+    setTimeout(() => card.classList.add('out'), 7000);
+    setTimeout(() => card.remove(), 7600);
+  }
+
   flashDamage() {
     if (this.ctx.save.settings.reduceMotion) return;
     this.vignette.classList.remove('hit');

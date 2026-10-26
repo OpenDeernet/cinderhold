@@ -7,6 +7,7 @@ import { Bot } from './sim/bot.js';
 import { World } from './render/world.js';
 import { Audio } from './audio/audio.js';
 import { Save } from './save.js';
+import { checkFeats } from './achievements.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 
@@ -56,7 +57,11 @@ const actions = {
     const g = session.game;
     if (g.waveIndex >= g.totalWaves || g.isOver()) return;
     const bonus = g.callWave();
-    if (bonus > 0) hud.toast(`Early call: +${bonus} gold`);
+    if (bonus > 0) {
+      session.earlyCalls++;
+      hud.toast(`Early call: +${bonus} gold`);
+      feats('early');
+    }
   },
   selectBuild: (type) => setBuild(session?.buildType === type ? null : type),
   deselect: () => select(null),
@@ -112,7 +117,7 @@ function startDemo() {
 function startBattle(idx, difficulty, endless) {
   const level = LEVELS[idx];
   const game = new Game({ level, levelIdx: idx, difficulty, perks: save.data.perks, endless });
-  session = { game, demo: false, speed: 1, paused: false, buildType: null, selected: null, recorded: false };
+  session = { game, demo: false, speed: 1, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0 };
   world.controls.autoRotate = false;
   world.load(game);
   screens.hide();
@@ -151,10 +156,19 @@ function select(tower) {
   hud.select(tower);
 }
 
+function feats(event, extra = {}) {
+  const earned = checkFeats({ event, game: session.game, save, battle: { earlyCalls: session.earlyCalls }, ...extra });
+  for (const f of earned) {
+    hud.featCard(f);
+    audio.play('upgrade', { force: true });
+  }
+}
+
 function recordResult(abandoned = false) {
   const g = session.game;
   session.recorded = true;
   save.addPlayTime(g.time);
+  save.addTotals(g.stats, g.status === 'won' && !abandoned);
   if (g.endless) {
     const newBest = save.recordEndless(g.level.id, g.stats.wavesCleared);
     save.persist();
@@ -191,9 +205,14 @@ function handleEvents(events) {
       case 'build':
       case 'upgrade':
         hud.tutorialEvent(ev.type);
+        feats(ev.type, { tower: ev.tower });
+        break;
+      case 'death':
+        if (ev.enemy.boss) feats('death', { enemy: ev.enemy });
         break;
       case 'cleared':
         if (ev.index >= 1) hud.tutorialEvent('cleared2');
+        if (s.game.endless) feats('cleared');
         break;
       case 'leak':
         hud.flashDamage();
@@ -203,6 +222,7 @@ function handleEvents(events) {
         setBuild(null);
         select(null);
         const outcome = recordResult();
+        feats(ev.type);
         audio.play(ev.type === 'won' ? 'win' : 'lose', { force: true });
         audio.setIntensity(0);
         setTimeout(() => {

@@ -586,6 +586,12 @@ button {
   animation: card-in 0.35s ease;
   transition: opacity 0.5s, transform 0.5s;
 }
+.card.feat {
+  border-left-color: var(--accent-2);
+}
+.card.feat .card-kicker {
+  color: var(--accent-2);
+}
 .card.out {
   opacity: 0;
   transform: translateX(-20px);

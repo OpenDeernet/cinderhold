@@ -904,6 +904,18 @@ export class World {
     const { model, enemy: e, bar } = rec;
     if (!e) return;
     const body = model.body;
+
+    // Squash briefly whenever health or shield drops.
+    const total = e.hp + e.shield;
+    if (rec.lastTotal !== undefined && total < rec.lastTotal - 0.5) rec.hitFlash = 1;
+    rec.lastTotal = total;
+    if (rec.hitFlash > 0) {
+      rec.hitFlash = Math.max(0, rec.hitFlash - dt * 8);
+      const k = rec.hitFlash * 0.18;
+      body.scale.set(1 + k, 1 - k, 1 + k);
+    } else if (body.scale.x !== 1) {
+      body.scale.set(1, 1, 1);
+    }
     const ph = rec.phase;
     const slow = e.slowMul < 1;
     const speed = e.speed * e.slowMul;

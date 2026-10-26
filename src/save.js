@@ -23,6 +23,8 @@ function fresh() {
     difficulty: 'normal',
     settings: { ...DEFAULT_SETTINGS },
     playSeconds: 0,
+    feats: [],
+    totals: { kills: 0, built: 0, battles: 0, wins: 0 },
   };
 }
 
@@ -36,7 +38,13 @@ export class Save {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.version === 1) {
-          this.data = { ...fresh(), ...parsed, settings: { ...DEFAULT_SETTINGS, ...parsed.settings } };
+          const base = fresh();
+          this.data = {
+            ...base,
+            ...parsed,
+            settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+            totals: { ...base.totals, ...parsed.totals },
+          };
         }
       }
     } catch {
@@ -129,6 +137,26 @@ export class Save {
     this.data.seen.push(type);
     this.persist();
     return true;
+  }
+
+  hasFeat(id) {
+    return this.data.feats.includes(id);
+  }
+
+  addFeat(id) {
+    if (this.hasFeat(id)) return false;
+    this.data.feats.push(id);
+    this.persist();
+    return true;
+  }
+
+  // Adds a finished battle's numbers to the lifetime totals.
+  addTotals(stats, won) {
+    const t = this.data.totals;
+    t.kills += stats.kills;
+    t.built += stats.built;
+    t.battles += 1;
+    if (won) t.wins += 1;
   }
 
   addPlayTime(sec) {

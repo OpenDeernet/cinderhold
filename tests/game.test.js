@@ -24,14 +24,30 @@ function run(game, seconds) {
 }
 
 describe('economy', () => {
-  it('charges for building and upgrading, refunds 70% on sale', () => {
+  it('refunds in full before the first wave and right after building', () => {
     const g = new Game({ level: TEST_LEVEL });
     const t = g.build('bolt', 2, 0);
+    expect(g.sellValue(t)).toBe(50);
+    g.callWave();
+    expect(g.sellValue(t)).toBe(50);
+    run(g, 6);
+    expect(g.sellValue(t)).toBe(35);
+    g.upgrade(t.id);
+    expect(g.sellValue(t)).toBe(115);
+  });
+
+  it('charges for building and upgrading, refunds 70% on sale', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    g.status = 'playing';
+    g.time = 100;
+    const t = g.build('bolt', 2, 0);
+    g.time = 110;
     expect(t).toBeTruthy();
     expect(g.gold).toBe(950);
     expect(g.upgrade(t.id)).toBe(true);
     expect(g.gold).toBe(885);
     expect(t.tier).toBe(1);
+    g.time = 120;
     expect(g.sell(t.id)).toBe(true);
     expect(g.gold).toBe(885 + Math.floor(115 * 0.7));
     expect(g.towers).toHaveLength(0);
@@ -54,6 +70,8 @@ describe('economy', () => {
     expect(g.buildCost('bolt')).toBe(46);
     const t = g.build('tesla', 2, 0);
     expect(t.s.chains).toBe(4);
+    g.status = 'playing';
+    g.time = 60;
     const before = g.gold;
     g.sell(t.id);
     expect(g.gold - before).toBe(Math.floor(t.invested * 0.85));

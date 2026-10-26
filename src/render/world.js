@@ -81,6 +81,7 @@ export class World {
     this.ambientTimer = 0;
     this.routeTimer = 0;
     this.routeSparks = [];
+    this.dying = [];
 
     this.makeCursorObjects();
     this.setQuality(this.quality);
@@ -201,6 +202,7 @@ export class World {
     this.scene.remove(this.root);
     for (const d of this.levelDisposables || []) d.dispose();
     for (const id of [...this.enemies.keys()]) this.removeEnemy(id);
+    this.dying = [];
     this.root = null;
     this.game = null;
     this.towers.clear();
@@ -810,6 +812,17 @@ export class World {
   }
 
   death(e, bounty) {
+    // Keep the model around briefly so it can sink away.
+    const rec = this.enemies.get(e.id);
+    if (rec) {
+      this.enemies.delete(e.id);
+      this.scene.remove(rec.bar.group);
+      rec.bar.fg.material.dispose();
+      if (rec.bar.sh) rec.bar.sh.material.dispose();
+      rec.dying = 0.35;
+      rec.baseScale = rec.model.root.scale.x;
+      this.dying.push(rec);
+    }
     const { x, z } = this.toWorld(e.x, e.y);
     const y = e.air ? AIR_HEIGHT : 0.4;
     const color = ENEMY_COLORS[e.type];
@@ -838,6 +851,7 @@ export class World {
     if (this.root && game) {
       for (const rec of this.towers.values()) this.animateTower(rec, dt, t);
       for (const rec of this.enemies.values()) this.animateEnemy(rec, dt, t);
+      this.animateDying(dt);
       for (const p of this.portals) p.swirl.rotation.x = t * 2;
       if (this.hold) {
         this.hold.flag.rotation.y = Math.sin(t * 3) * 0.3;
@@ -975,6 +989,23 @@ export class World {
         bar.sh.scale.x = Math.max(0.001, bar.width * s);
         bar.sh.position.x = -(bar.width * (1 - s)) / 2;
       }
+    }
+  }
+
+  animateDying(dt) {
+    for (let i = this.dying.length - 1; i >= 0; i--) {
+      const rec = this.dying[i];
+      rec.dying -= dt;
+      const root = rec.model.root;
+      if (rec.dying <= 0) {
+        this.root.remove(root);
+        this.dying.splice(i, 1);
+        continue;
+      }
+      const k = rec.dying / 0.35;
+      root.scale.setScalar(rec.baseScale * k);
+      root.position.y -= dt * (rec.enemy.air ? 2.5 : 0.8);
+      root.rotation.z += dt * 4;
     }
   }
 

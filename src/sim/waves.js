@@ -39,7 +39,7 @@ export function generateWave(level, levelIdx, w, spawnCount, opts = {}) {
   // Endless waves stop growing in head count after wave 30 and grow in
   // toughness instead, which keeps entity counts sane.
   const bw = opts.endless ? Math.min(w, ENDLESS_COUNT_CAP) : w;
-  let budget = waveBudget(bw, levelIdx);
+  let budget = waveBudget(bw, levelIdx) * (opts.budgetScale || 1);
   const groups = [];
   let delay = 0;
 

@@ -12,7 +12,9 @@ const FREE_SELL_WINDOW = 5;
 export const DIFFICULTY = {
   casual: { label: 'Casual', hp: 0.75, lives: 1.5, bounty: 1.1 },
   normal: { label: 'Normal', hp: 1, lives: 1, bounty: 1 },
-  heroic: { label: 'Heroic', hp: 1.3, lives: 0.5, bounty: 0.9 },
+  // Heroic leans hardest on the early maps, which are otherwise a formality,
+  // and eases off on the late ones, which are already brutal.
+  heroic: { label: 'Heroic', hp: 1.45, hpPerLevel: -0.05, budget: 1.3, budgetPerLevel: -0.03, lives: 0.5, bounty: 0.9 },
 };
 
 // The whole rules engine. It knows nothing about rendering: the renderer and
@@ -22,7 +24,12 @@ export class Game {
     this.level = level;
     this.levelIdx = levelIdx;
     this.difficulty = DIFFICULTY[difficulty] ? difficulty : 'normal';
-    this.diff = DIFFICULTY[this.difficulty];
+    const d = DIFFICULTY[this.difficulty];
+    this.diff = {
+      ...d,
+      hp: d.hp + (d.hpPerLevel || 0) * levelIdx,
+      budget: (d.budget || 1) + (d.budgetPerLevel || 0) * levelIdx,
+    };
     this.perks = new Set(perks);
     this.endless = endless;
     this.map = parseMap(level.map);
@@ -54,7 +61,10 @@ export class Game {
 
   wave(i) {
     if (!this.waveCache.has(i)) {
-      this.waveCache.set(i, generateWave(this.level, this.levelIdx, i, this.map.routes.length, { endless: this.endless }));
+      this.waveCache.set(i, generateWave(this.level, this.levelIdx, i, this.map.routes.length, {
+        endless: this.endless,
+        budgetScale: this.diff.budget,
+      }));
     }
     return this.waveCache.get(i);
   }

@@ -79,13 +79,18 @@ export class Hud {
     this.panel = h('div.tower-panel');
     this.panel.hidden = true;
 
+    this.bossName = h('div.boss-name');
+    this.bossFill = h('div.boss-fill');
+    this.bossBar = h('div.boss-bar', this.bossName, h('div.boss-track', this.bossFill));
+    this.bossBar.hidden = true;
+
     this.announceEl = h('div.announce');
     this.cards = h('div.cards');
     this.hint = h('div.hint');
     this.hint.hidden = true;
     this.vignette = h('div.vignette');
 
-    this.el.append(this.vignette, this.top, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
+    this.el.append(this.vignette, this.top, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
   attach(game, { tutorial }) {
@@ -162,7 +167,19 @@ export class Hud {
     });
     set('preview', g.waveIndex, () => this.renderPreview(g));
 
+    this.updateBoss(g);
     if (this.selected) this.updatePanel();
+  }
+
+  // The toughest boss on the field gets a bar under the top HUD.
+  updateBoss(g) {
+    let boss = null;
+    for (const e of g.enemies) if (e.boss && (!boss || e.hp > boss.hp)) boss = e;
+    this.bossBar.hidden = !boss;
+    if (!boss) return;
+    const name = ENEMIES[boss.type].name;
+    if (this.bossName.textContent !== name) this.bossName.textContent = name;
+    this.bossFill.style.width = `${Math.max(0, (boss.hp / boss.maxHp) * 100).toFixed(1)}%`;
   }
 
   bonusPreview(g) {

@@ -653,6 +653,40 @@ button {
   }
 }
 
+.boss-bar {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 24px));
+  pointer-events: none !important;
+  text-align: center;
+}
+.boss-bar[hidden] {
+  display: none;
+}
+.boss-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #ffb0a0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  margin-bottom: 4px;
+}
+.boss-track {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(20, 10, 8, 0.85);
+  border: 1px solid rgba(255, 90, 60, 0.5);
+  overflow: hidden;
+}
+.boss-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b8241a, #ff5a3a);
+  transition: width 0.2s linear;
+}
+
 /* ------------------------------------------------------------ menus */
 
 .screens {
@@ -1175,6 +1209,10 @@ button {
   }
   .wave-box {
     top: 108px;
+  }
+  .boss-bar {
+    top: auto;
+    bottom: 92px;
   }
   .wave-btn {
     padding: 8px 10px;

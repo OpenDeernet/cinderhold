@@ -294,6 +294,7 @@ export class Hud {
   }
 
   flashDamage() {
+    if (this.ctx.save.settings.reduceMotion) return;
     this.vignette.classList.remove('hit');
     void this.vignette.offsetWidth;
     this.vignette.classList.add('hit');

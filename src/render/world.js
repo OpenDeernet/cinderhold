@@ -1001,6 +1001,7 @@ export class World {
   }
 
   shakeBoard(dt) {
+    if (this.reduceMotion) this.shake = 0;
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.2);
       const s = this.shake * 0.3;

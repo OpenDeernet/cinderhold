@@ -572,7 +572,20 @@ export class World {
     const rec = this.towers.get(p.tower);
     const h0 = rec ? (rec.model.muzzle.y * rec.model.head.scale.y + rec.model.head.position.y) : 0.7;
     const d0 = Math.hypot(p.tx - p.x, p.ty - p.y) || 1;
-    this.projectiles.set(p.id, { mesh: m, h0, d0 });
+    let marker = null;
+    if (p.arc) {
+      // Telegraph where the shell will land.
+      marker = new THREE.Mesh(
+        geo('shock', () => new THREE.RingGeometry(0.8, 1, 40).rotateX(-Math.PI / 2)),
+        this.markerMat || (this.markerMat = new THREE.MeshBasicMaterial({ color: 0xff5a3a, transparent: true, opacity: 0.5, depthWrite: false })),
+      );
+      const w = this.toWorld(p.tx, p.ty);
+      marker.position.set(w.x, 0.04, w.z);
+      marker.scale.set(p.splash, 1, p.splash);
+      marker.renderOrder = 2;
+      this.root.add(marker);
+    }
+    this.projectiles.set(p.id, { mesh: m, h0, d0, marker });
   }
 
   // Reconciles 3D objects with the simulation state. alpha interpolates
@@ -639,6 +652,11 @@ export class World {
       }
       rec.mesh.position.set(w.x, hgt, w.z);
       if (p.type === 'bolt' || p.type === 'frost') rec.mesh.rotation.y = -Math.atan2(p.ty - p.y, p.tx - p.x);
+      if (rec.marker) {
+        const k = Math.min(1, p.t / p.flight);
+        const r = p.splash * (1 - 0.6 * k);
+        rec.marker.scale.set(r, 1, r);
+      }
       if (p.type === 'mortar' && Math.random() < 0.5) {
         this.smoke.emit({ x: w.x, y: hgt, z: w.z, color: 0x5a5550, alpha: 0.5, size: 0.18, endSize: 0.35, life: 0.5 });
       }
@@ -646,6 +664,7 @@ export class World {
     for (const [id, rec] of this.projectiles) {
       if (!seen.has(id)) {
         this.root.remove(rec.mesh);
+        if (rec.marker) this.root.remove(rec.marker);
         this.projectiles.delete(id);
       }
     }

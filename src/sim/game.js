@@ -36,6 +36,7 @@ export class Game {
     this.waveCache = new Map();
     this.spawners = [];
     this.enemies = [];
+    this.enemyById = new Map();
     this.towers = [];
     this.projectiles = [];
     this.events = [];
@@ -295,6 +296,7 @@ export class Game {
     e.seg = p.seg;
     e.dir = p.dir;
     this.enemies.push(e);
+    this.enemyById.set(e.id, e);
     this.emit({ type: 'spawn', enemy: e });
     return e;
   }
@@ -531,7 +533,8 @@ export class Game {
         keep.push(p);
         continue;
       }
-      const target = p.target ? this.enemies.find((e) => e.id === p.target && !e.dead) : null;
+      const found = p.target ? this.enemyById.get(p.target) : null;
+      const target = found && !found.dead ? found : null;
       if (target) {
         p.tx = target.x;
         p.ty = target.y;
@@ -619,6 +622,7 @@ export class Game {
         alive.push(e);
         continue;
       }
+      this.enemyById.delete(e.id);
       const def = ENEMIES[e.type];
       if (e.leaked) {
         this.lives = Math.max(0, this.lives - def.lives);

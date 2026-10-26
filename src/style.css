@@ -1199,6 +1199,35 @@ button {
   display: none;
 }
 
+.stats.records {
+  margin: 0 0 16px;
+}
+.feat-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 8px;
+}
+.feat-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.6;
+}
+.feat-item.got {
+  opacity: 1;
+  background: rgba(255, 195, 90, 0.12);
+}
+.feat-name {
+  font-weight: 800;
+}
+.feat-blurb {
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
 /* ------------------------------------------------------------ small screens */
 
 @media (max-width: 720px) {

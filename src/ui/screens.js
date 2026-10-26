@@ -4,6 +4,7 @@ import { TOWERS, TOWER_ORDER, towerTier } from '../sim/data/towers.js';
 import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
 import { DIFFICULTY } from '../sim/game.js';
 import { THEMES } from '../render/themes.js';
+import { FEATS } from '../achievements.js';
 import { clear, fill, fmtTime, h, icon } from './dom.js';
 
 const THEME_NAMES = {
@@ -83,6 +84,7 @@ export class Screens {
         this.btn(s.endlessUnlocked() ? 'Endless Siege' : 'Endless Siege (clear level 3)', () => this.endless(), s.endlessUnlocked() ? '' : 'locked'),
         this.btn(h('span', 'War Council ', h('span.pill', icon('star', 'icon tiny'), ` ${s.starsFree()}/${stars}`)), () => this.perks()),
         this.btn('Codex', () => this.codex()),
+        this.btn(h('span', 'Records ', h('span.pill', `${s.data.feats.length}/${FEATS.length}`)), () => this.records()),
         this.btn('Settings', () => this.settings(() => this.title())),
         this.btn('How to Play', () => this.help(() => this.title())),
       ),
@@ -289,6 +291,38 @@ export class Screens {
       h(`button.seg-btn${tab === 'enemies' ? '.on' : ''}`, { onclick: () => { this.click(); this.codex('enemies'); } }, 'Enemies'),
     );
     this.mount('codex', h('div.panel.wide', h('div.panel-head', h('h2', 'Codex'), tabs), body, h('div.row', this.btn('Back', () => this.title()))));
+  }
+
+  // ---------------------------------------------------------------- records
+
+  records() {
+    const s = this.save;
+    const t = s.data.totals;
+    const bestEndless = Math.max(0, ...LEVELS.map((l) => s.level(l.id).bestEndless || 0));
+    const heroic = LEVELS.filter((l) => s.level(l.id).heroic).length;
+    const lines = [
+      ['Time played', fmtTime(s.data.playSeconds)],
+      ['Battles fought', String(t.battles)],
+      ['Battles won', String(t.wins)],
+      ['Enemies slain', t.kills.toLocaleString()],
+      ['Towers built', t.built.toLocaleString()],
+      ['Stars', `${s.starsEarned()} / ${LEVELS.length * 3}`],
+      ['Heroic victories', `${heroic} / ${LEVELS.length}`],
+      ['Best endless wave', bestEndless ? String(bestEndless) : '—'],
+    ];
+    const feats = h('div.feat-list', FEATS.map((f) => {
+      const got = s.hasFeat(f.id);
+      return h(`div.feat-item${got ? '.got' : ''}`,
+        icon('star', `icon star ${got ? 'on' : 'off'}`),
+        h('div', h('div.feat-name', f.name), h('div.feat-blurb', f.blurb)),
+      );
+    }));
+    this.mount('records', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'Records'), h('div.pill', `${s.data.feats.length} / ${FEATS.length} feats`)),
+      h('table.stats.records', lines.map(([k, v]) => h('tr', h('td', k), h('td', v)))),
+      feats,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
   }
 
   // ---------------------------------------------------------------- settings & help

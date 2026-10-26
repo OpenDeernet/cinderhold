@@ -10,6 +10,8 @@ const THEME_NAMES = {
   meadow: 'Meadow', autumn: 'Autumn', desert: 'Desert', snow: 'Snow', swamp: 'Fen', volcanic: 'Caldera',
 };
 
+const BACK_LABELS = ['Back', 'Cancel', 'Done', 'Resume'];
+
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
 // Full-screen menus: title, level select, perks, codex, settings, help,
@@ -32,11 +34,20 @@ export class Screens {
 
   btn(label, onclick, cls = '') {
     return h(`button.btn${cls ? '.' + cls : ''}`, {
+      'data-back': BACK_LABELS.includes(label) || undefined,
       onclick: (e) => {
         this.click();
         onclick(e);
       },
     }, label);
+  }
+
+  // Esc in a menu does whatever its Back/Cancel/Done/Resume button does.
+  back() {
+    const b = this.el.querySelector('button[data-back]');
+    if (!b) return false;
+    b.click();
+    return true;
   }
 
   hide() {

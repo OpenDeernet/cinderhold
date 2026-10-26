@@ -417,7 +417,7 @@ export class World {
   pickTile(clientX, clientY) {
     if (!this.map) return null;
     const rect = this.renderer.domElement.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    const ndc = (this.ndc || (this.ndc = new THREE.Vector2())).set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
     const hit = this.raycaster.ray.intersectPlane(this.groundPlane, this.tmp);
     if (!hit) return null;
@@ -1108,12 +1108,14 @@ export class World {
 
   updatePan(dt) {
     if (!this.panKeys.size) return;
-    const fwd = new THREE.Vector3();
+    const fwd = this.panFwd || (this.panFwd = new THREE.Vector3());
+    const right = this.panRight || (this.panRight = new THREE.Vector3());
+    const move = this.panMove || (this.panMove = new THREE.Vector3());
     this.camera.getWorldDirection(fwd);
     fwd.y = 0;
     fwd.normalize();
-    const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
-    const move = new THREE.Vector3();
+    right.crossVectors(fwd, this.camera.up);
+    move.set(0, 0, 0);
     if (this.panKeys.has('up')) move.add(fwd);
     if (this.panKeys.has('down')) move.sub(fwd);
     if (this.panKeys.has('right')) move.add(right);

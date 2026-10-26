@@ -269,6 +269,9 @@ export class Game {
   spawnEnemy(type, routeIdx, scale, wave, head = 0, d = 0) {
     const def = ENEMIES[type];
     const route = this.map.routes[routeIdx];
+    // Bosses already have huge base health; scaling them as hard as the rank
+    // and file makes mid-level bosses unkillable.
+    if (def.boss) scale = Math.pow(scale, 0.6);
     const hp = Math.round(def.hp * scale * this.diff.hp);
     const shield = def.shield ? Math.round(def.shield * scale * this.diff.hp) : 0;
     const e = {

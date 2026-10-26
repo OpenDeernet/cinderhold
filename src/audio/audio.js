@@ -233,6 +233,9 @@ export class Audio {
       case 'heal':
         this.tone({ freq: 520, to: 880, dur: 0.25, type: 'sine', vol: 0.05, attack: 0.05 });
         break;
+      case 'tick':
+        this.tone({ freq: 1200, dur: 0.05, type: 'triangle', vol: 0.06 });
+        break;
       case 'click':
         this.tone({ freq: 760, dur: 0.04, type: 'sine', vol: 0.07, force: true });
         break;

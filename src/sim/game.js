@@ -7,6 +7,7 @@ export const TICK = 1 / 30;
 const AUTO_WAVE_DELAY = 14;
 const SHIELD_REGEN_DELAY = 2.5;
 const MAX_TICKS_PER_UPDATE = 12;
+const FREE_SELL_WINDOW = 5;
 
 export const DIFFICULTY = {
   casual: { label: 'Casual', hp: 0.75, lives: 1.5, bounty: 1.1 },
@@ -80,6 +81,9 @@ export class Game {
   }
 
   sellValue(tower) {
+    // Misplaced towers can be taken back for free: before the first wave,
+    // or within a few seconds of building or upgrading.
+    if (this.status === 'ready' || this.time - tower.touchedAt < FREE_SELL_WINDOW) return tower.invested;
     const rate = this.perks.has('salvage') ? 0.85 : 0.7;
     return Math.floor(tower.invested * rate);
   }
@@ -133,6 +137,7 @@ export class Game {
       target: 0,
       mode: 'first',
       invested: cost,
+      touchedAt: this.time,
       kills: 0,
       damage: 0,
       s: this.towerStats(type, 0),
@@ -153,6 +158,7 @@ export class Game {
     this.stats.goldSpent += cost;
     t.tier++;
     t.invested += cost;
+    t.touchedAt = this.time;
     t.s = this.towerStats(t.type, t.tier);
     this.emit({ type: 'upgrade', tower: t });
     return true;

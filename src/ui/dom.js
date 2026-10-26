@@ -61,3 +61,12 @@ export function fmtTime(sec) {
   if (h) return `${h}h ${String(m % 60).padStart(2, '0')}m`;
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 }
+
+export function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+  } catch {
+    // not available (iOS Safari, iframes)
+  }
+}

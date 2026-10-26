@@ -10,6 +10,7 @@ import { Save } from './save.js';
 import { checkFeats } from './achievements.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
+import { toggleFullscreen } from './ui/dom.js';
 
 const save = new Save();
 const audio = new Audio(save.settings);
@@ -342,6 +343,10 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.code === 'Escape' && screens.current && screens.current !== 'title' && screens.current !== 'result') {
     if (screens.back()) return;
+  }
+  if (e.code === 'KeyG') {
+    toggleFullscreen();
+    return;
   }
   if (!session || session.demo) return;
   if (PAN_KEYS[e.code] && !session.paused) {

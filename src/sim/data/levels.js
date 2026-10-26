@@ -1,6 +1,6 @@
 // The campaign. Each level introduces something new; `pool` lists which
 // enemies the wave generator may use and from which wave (0-based) onward.
-// `bosses` places boss waves explicitly.
+// `bosses` places boss waves explicitly; `threat` scales wave size.
 
 export const LEVELS = [
   {
@@ -256,7 +256,8 @@ export const LEVELS = [
     name: 'Caldera Gate',
     theme: 'volcanic',
     intro: 'The road coils down into the caldera. At its end waits an Ashen Colossus.',
-    startGold: 360,
+    startGold: 300,
+    threat: 1.55,
     lives: 20,
     waves: 22,
     towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],

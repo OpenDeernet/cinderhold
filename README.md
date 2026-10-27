@@ -21,11 +21,16 @@ heart of the ash.
   healers, fliers, units that split on death, and two bosses.
 - **Targeting modes** per tower (first, last, strongest, closest), selling,
   early-wave bonuses, 1×/2×/3× speed.
-- **Three difficulties**, star ratings, and a **War Council** of ten perks
+- **Three difficulties**, star ratings, and a **War Council** of twelve perks
   bought with stars (refundable at any time).
+- **14 feats** to earn, lifetime records, per-level best times, and save
+  export/import for moving progress between browsers.
 - **Endless Siege** on any cleared map, with its own escalating roster.
-- **Codex** of towers and enemies, an in-game tutorial on the first level,
-  and a live bot-played battle behind the title screen.
+- **Codex** with full per-tier tower stats and enemy kill counts, an in-game
+  tutorial on the first level, and a live bot-played battle behind the title
+  screen.
+- Boss health bar, mortar landing markers, range overlay (R), reduce-motion
+  setting and automatic graphics fallback on slow machines.
 - All models are built from primitives in code, all sound effects and music
   are synthesised at runtime with the Web Audio API, and icons are
   hand-written SVG. No external assets, no network calls, no API keys.

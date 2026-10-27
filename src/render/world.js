@@ -895,6 +895,15 @@ export class World {
         this.hold.fire.scale.y = 0.22 + Math.sin(t * 17) * 0.03;
         this.holdFlash = Math.max(0, this.holdFlash - dt * 2);
         this.hold.fire.material.emissive.setRGB(1, 0.42 - this.holdFlash * 0.4, 0);
+        // A battered Hold smokes, more heavily the closer it is to falling.
+        const hurt = 1 - game.lives / game.maxLives;
+        if (hurt > 0.5 && Math.random() < dt * 14 * (hurt - 0.4)) {
+          const p = this.hold.root.position;
+          this.smoke.emit({
+            x: p.x + (Math.random() - 0.5) * 0.5, y: 1.1, z: p.z + (Math.random() - 0.5) * 0.5,
+            vx: 0.15, vy: 0.7, color: 0x3a3430, alpha: 0.6, life: 2.2, size: 0.35, endSize: 0.9, drag: 0.5,
+          });
+        }
       }
       if (this.water) {
         this.water.position.y = Math.sin(t * 1.3) * 0.015;

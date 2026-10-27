@@ -23,7 +23,7 @@ export class Hud {
     this.waveTxt = h('span.val');
     this.fps = h('div.fps');
     this.top = h('div.hud-top',
-      h('div.res', { title: 'Lives' }, icon('heart', 'icon'), this.lives),
+      h('div.res', { title: 'Lives', 'aria-label': 'Lives', role: 'status' }, icon('heart', 'icon'), this.lives),
       h('div.res', { title: 'Gold' }, icon('coin', 'icon'), this.gold),
       h('div.res', { title: 'Wave' }, icon('wave', 'icon'), this.waveTxt),
       h('div.spacer'),
@@ -31,12 +31,13 @@ export class Hud {
     );
     this.speedBtns = [1, 2, 3].map((n) => h('button.hbtn.speed', {
       title: `Speed ×${n} (F)`,
+      'aria-label': `Game speed ${n}x`,
       onclick: () => {
         this.ctx.audio.play('click');
         a.setSpeed(n);
       },
     }, `${n}×`));
-    this.pauseBtn = h('button.hbtn', { title: 'Pause (P)', onclick: () => a.togglePause() }, 'II');
+    this.pauseBtn = h('button.hbtn', { title: 'Pause (P)', 'aria-label': 'Pause', onclick: () => a.togglePause() }, 'II');
     this.top.append(h('div.speeds', this.speedBtns), this.pauseBtn);
 
     // Wave control
@@ -50,6 +51,7 @@ export class Hud {
     for (const [i, type] of TOWER_ORDER.entries()) {
       const cost = h('span.cost');
       const b = h('button.tower-btn', {
+        'aria-label': `Build ${TOWERS[type].name} (${i + 1})`,
         onclick: () => a.selectBuild(type),
         onmouseenter: () => this.showTip(type, b),
         onmouseleave: () => this.hideTip(),
@@ -182,7 +184,7 @@ export class Hud {
     const boss = wave.groups.some((x) => ENEMIES[x.type].boss);
     this.preview.append(h('span.preview-label', boss ? 'Boss wave' : `Wave ${wave.index + 1}`));
     for (const { type, count } of waveSummary(wave)) {
-      this.preview.append(h(`span.preview-item${ENEMIES[type].boss ? '.boss' : ''}`, { title: ENEMIES[type].name }, icon(type, 'icon small'), `×${count}`));
+      this.preview.append(h(`span.preview-item${ENEMIES[type].boss ? '.boss' : ''}`, { title: `${ENEMIES[type].name}: ${ENEMIES[type].blurb}` }, icon(type, 'icon small'), `×${count}`));
     }
     this.preview.classList.toggle('boss', boss);
   }
@@ -254,7 +256,7 @@ export class Hud {
       h('div.panel-top',
         icon(t.type, 'icon'),
         h('div', h('div.tp-name', def.name), h('div.pips', [0, 1, 2].map((i) => h(`span.pip${i <= t.tier ? '.on' : ''}`)))),
-        h('button.close', { title: 'Close (Esc)', onclick: () => a.deselect() }, '×'),
+        h('button.close', { title: 'Close (Esc)', 'aria-label': 'Close', onclick: () => a.deselect() }, '×'),
       ),
       h('table.tp-stats', rows),
       h('div.tp-record', `${t.kills} kills · ${Math.round(t.damage)} damage`),

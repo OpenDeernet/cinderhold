@@ -250,6 +250,7 @@ function updateCursor() {
   if (!tile) {
     world.setHover(null);
     world.setGhost(null);
+    world.setHoverTower(null);
     canvas.style.cursor = 'default';
     return;
   }
@@ -262,6 +263,7 @@ function updateCursor() {
     const t = g.towerAt(tile.c, tile.r);
     world.setGhost(null);
     world.setHover(t ? tile : null, 0xffe08a);
+    world.setHoverTower(t);
     canvas.style.cursor = t ? 'pointer' : 'default';
   }
 }
@@ -295,6 +297,7 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointerleave', () => {
   world.setHover(null);
   world.setGhost(null);
+  world.setHoverTower(null);
   lastPointer = null;
 });
 

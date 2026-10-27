@@ -357,6 +357,7 @@ export class World {
     this.hold.root.position.set(ex.x, -0.08, ex.z);
     this.hold.root.scale.setScalar(0.9);
     this.root.add(this.hold.root);
+    this.levelDisposables.push(this.hold.fire.material);
     this.holdFlash = 0;
   }
 

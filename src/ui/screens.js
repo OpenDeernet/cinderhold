@@ -290,6 +290,7 @@ export class Screens {
             known ? h('div.codex-stats',
               `Health ${e.hp}${e.shield ? ` + ${e.shield} shield` : ''}${e.armor ? ` · Armor ${e.armor}` : ''} · Speed ${e.speed} · `,
               `Bounty ${e.bounty} · Costs ${e.lives} ${e.lives > 1 ? 'lives' : 'life'}${e.air ? ' · Flying' : ''}`,
+              ` · Slain ${(this.save.data.totals.byType?.[id] || 0).toLocaleString()}`,
             ) : null,
           ),
         ));

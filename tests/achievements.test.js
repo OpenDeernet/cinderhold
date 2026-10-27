@@ -47,7 +47,10 @@ describe('feats', () => {
     const save = new Save();
     save.addTotals({ kills: 6000, built: 10 }, true);
     save.addTotals({ kills: 4000, built: 3 }, false);
-    expect(save.data.totals).toEqual({ kills: 10000, built: 13, battles: 2, wins: 1 });
+    expect(save.data.totals).toEqual({ kills: 10000, built: 13, battles: 2, wins: 1, byType: {} });
+    save.addTotals({ kills: 3, built: 0, killsByType: { grunt: 2, wisp: 1 } }, false);
+    save.addTotals({ kills: 1, built: 0, killsByType: { grunt: 1 } }, false);
+    expect(save.data.totals.byType).toEqual({ grunt: 3, wisp: 1 });
     const game = new Game({ level: LEVELS[0] });
     expect(checkFeats(ctx(save, game, { event: 'tick' })).map((f) => f.id)).toEqual(['veteran']);
   });

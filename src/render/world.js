@@ -125,6 +125,10 @@ export class World {
     const scale = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     this.fx.material.uniforms.scale.value = scale;
     this.smoke.material.uniforms.scale.value = scale;
+    // Rotating a phone flips the layout; re-frame so the board still fits.
+    const portrait = w < h;
+    if (this.map && this.portrait !== undefined && portrait !== this.portrait) this.frameCamera();
+    this.portrait = portrait;
   }
 
   makeCursorObjects() {

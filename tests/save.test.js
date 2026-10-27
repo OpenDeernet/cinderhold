@@ -92,6 +92,19 @@ describe('Save', () => {
     expect(s.settings.quality).toBe('low');
   });
 
+  it('exports and imports progress', () => {
+    const a = new Save();
+    a.recordWin(LEVELS[0].id, 3, 'normal');
+    const text = a.exportString();
+    a.reset();
+    expect(a.starsEarned()).toBe(0);
+    expect(a.importString(text)).toBe(true);
+    expect(a.starsEarned()).toBe(3);
+    expect(a.importString('garbage')).toBe(false);
+    expect(a.importString('{"version":2}')).toBe(false);
+    expect(a.starsEarned()).toBe(3);
+  });
+
   it('remembers the best endless wave', () => {
     const s = new Save();
     expect(s.recordEndless(LEVELS[0].id, 12)).toBe(true);

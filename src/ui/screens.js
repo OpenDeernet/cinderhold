@@ -5,6 +5,7 @@ import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
 import { DIFFICULTY } from '../sim/game.js';
 import { THEMES } from '../render/themes.js';
 import { FEATS } from '../achievements.js';
+import { statLines } from './stats.js';
 import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
 const THEME_NAMES = {
@@ -255,17 +256,22 @@ export class Screens {
     if (tab === 'towers') {
       for (const id of TOWER_ORDER) {
         const t = TOWERS[id];
-        const s0 = towerTier(id, 0);
-        const s2 = towerTier(id, 2);
+        // One column per tier; the Targets row is the same for all tiers.
+        const tiers = [0, 1, 2].map((i) => statLines(id, towerTier(id, i)).filter(([k]) => k !== 'Targets'));
+        const table = h('table.tier-table',
+          h('tr', h('th', ''), ['I', 'II', 'III'].map((n) => h('th', n))),
+          h('tr', h('td', 'Cost'), t.tiers.map((x) => h('td', String(x.cost)))),
+          tiers[0].map(([k], r) => h('tr', h('td', k), tiers.map((rows) => h('td', rows[r][1])))),
+        );
         body.appendChild(h('div.codex-card',
           icon(id, 'icon big'),
           h('div',
             h('div.codex-name', t.name),
             h('div.codex-blurb', t.blurb),
             h('div.codex-stats',
-              `Cost ${s0.cost} · Damage ${s0.damage}→${s2.damage} · Range ${s0.range}→${s2.range} · `,
               `${t.hitsAir ? (t.hitsGround ? 'Ground & air' : 'Air') : 'Ground only'} · ${t.damageType === 'energy' ? 'Ignores armor' : 'Physical'}`,
             ),
+            table,
           ),
         ));
       }

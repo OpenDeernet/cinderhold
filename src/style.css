@@ -1241,6 +1241,25 @@ button {
   color: var(--ink-dim);
 }
 
+.tier-table {
+  margin-top: 6px;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tier-table th,
+.tier-table td {
+  padding: 1px 10px 1px 0;
+  text-align: right;
+}
+.tier-table th {
+  color: var(--accent-2);
+}
+.tier-table td:first-child {
+  text-align: left;
+  color: var(--ink-mute);
+}
+
 /* ------------------------------------------------------------ small screens */
 
 @media (max-width: 720px) {

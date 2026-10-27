@@ -200,6 +200,7 @@ export class World {
     this.frameCamera();
     this.routeTimer = 0;
     this.routeSparks = [];
+    this.fireworks = 0;
   }
 
   unload() {

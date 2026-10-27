@@ -121,7 +121,9 @@ export class Hud {
     });
     set('gold', g.gold, (v) => (this.gold.textContent = String(v)));
     set('wave', `${g.waveIndex}|${g.totalWaves}`, () => {
-      this.waveTxt.textContent = g.endless ? `${g.waveIndex}` : `${g.waveIndex} / ${g.totalWaves}`;
+      const best = g.endless ? this.ctx.save.level(g.level.id).bestEndless || 0 : 0;
+      if (!g.endless) this.waveTxt.textContent = `${g.waveIndex} / ${g.totalWaves}`;
+      else this.waveTxt.textContent = best ? `${g.waveIndex} · best ${best}` : `${g.waveIndex}`;
     });
     set('speed', session.speed, (v) => this.speedBtns.forEach((b, i) => b.classList.toggle('on', i + 1 === v)));
     set('fps', this.ctx.save.settings.showFps ? Math.round(fps) : -1, (v) => {

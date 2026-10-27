@@ -51,7 +51,10 @@ const actions = {
   resume: () => setPaused(false),
   togglePause: () => setPaused(!session?.paused),
   setSpeed: (n) => {
-    if (session && !session.demo) session.speed = n;
+    if (!session || session.demo) return;
+    session.speed = n;
+    save.data.speed = n;
+    save.persist();
   },
   callWave: () => {
     if (!session || session.demo || session.paused) return;
@@ -118,7 +121,8 @@ function startDemo() {
 function startBattle(idx, difficulty, endless) {
   const level = LEVELS[idx];
   const game = new Game({ level, levelIdx: idx, difficulty, perks: save.data.perks, endless });
-  session = { game, demo: false, speed: 1, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0 };
+  const speed = [1, 2, 3].includes(save.data.speed) ? save.data.speed : 1;
+  session = { game, demo: false, speed, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0 };
   world.controls.autoRotate = false;
   world.load(game);
   screens.hide();
@@ -389,7 +393,7 @@ window.addEventListener('keydown', (e) => {
       actions.cycleTarget();
       break;
     case 'KeyF':
-      session.speed = (session.speed % 3) + 1;
+      actions.setSpeed((session.speed % 3) + 1);
       break;
     case 'KeyR':
       world.setShowRanges(!world.showRanges);

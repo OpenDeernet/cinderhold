@@ -266,6 +266,7 @@ export class World {
     const roadCol = [];
     const bed = [];
     const water = [];
+    const waterSpots = [];
     const trees = [];
     const rocks = [];
     const c1 = new THREE.Color(theme.ground);
@@ -283,6 +284,7 @@ export class World {
         } else if (t === TILE.WATER) {
           bed.push(M().compose(new THREE.Vector3(x, -0.4, z), new THREE.Quaternion(), new THREE.Vector3(1, 0.2, 1)));
           water.push(M().makeTranslation(x, -0.14, z));
+          waterSpots.push({ x, z });
         } else {
           ground.push(M().compose(new THREE.Vector3(x, -0.2, z), new THREE.Quaternion(), new THREE.Vector3(1, 0.4, 1)));
           groundCol.push(c1.clone().lerp(c2, (r + c) % 2 ? 0.2 : 0.4 + rng.next() * 0.25).offsetHSL(0, 0, (rng.next() - 0.5) * 0.02));
@@ -323,6 +325,8 @@ export class World {
     } else {
       this.water = null;
     }
+
+    this.waterSpots = waterSpots;
 
     // Board base and the wider skirt it sits on.
     const base = new THREE.Mesh(box, mat(new THREE.Color(theme.skirt).multiplyScalar(0.7).getHex()));
@@ -1107,6 +1111,13 @@ export class World {
   }
 
   ambient(dt) {
+    // Lava pools spit the odd glowing ember.
+    if (this.theme.waterEmissive > 0x200000 && this.waterSpots.length && Math.random() < dt * 3 * this.particleScale) {
+      const w = this.waterSpots[Math.floor(Math.random() * this.waterSpots.length)];
+      this.fx.burst(w.x + (Math.random() - 0.5) * 0.7, -0.05, w.z + (Math.random() - 0.5) * 0.7, 3, {
+        color: [0xffb04a, 0xff6a1a], speed: 0.5, up: 3, life: 0.7, size: 0.12, gravity: 3, spread: 0.1,
+      });
+    }
     this.ambientTimer -= dt;
     if (this.ambientTimer > 0) return;
     this.ambientTimer = 0.05 / this.particleScale;

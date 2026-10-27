@@ -82,6 +82,7 @@ export class World {
     this.routeTimer = 0;
     this.routeSparks = [];
     this.dying = [];
+    this.fireworks = 0;
 
     this.makeCursorObjects();
     this.setQuality(this.quality);
@@ -833,6 +834,9 @@ export class World {
         this.fx.burst(x, 0.5, z, 5, { color: [0xff6a2a, 0xffb04a], speed: 0.9, up: 0.6, life: 0.4, size: 0.15, spread: 0.4 });
         break;
       }
+      case 'won':
+        this.fireworks = 2.5;
+        break;
       case 'wave': {
         for (const p of this.portals) {
           const { x, z } = p.root.position;
@@ -944,6 +948,7 @@ export class World {
         else this.setSelected(this.selected);
       }
       this.updateRanges(game);
+      this.updateFireworks(dt);
       this.ambient(dt);
       this.routePreview(dt, game);
       this.shakeBoard(dt);
@@ -1067,6 +1072,19 @@ export class World {
         bar.sh.position.x = -(bar.width * (1 - s)) / 2;
       }
     }
+  }
+
+  // Victory: bursts of gold and ember sparks over the Hold.
+  updateFireworks(dt) {
+    if (!(this.fireworks > 0)) return;
+    this.fireworks -= dt;
+    if (Math.random() > dt * 5) return;
+    const h = this.hold.root.position;
+    const x = h.x + (Math.random() - 0.5) * 4;
+    const z = h.z + (Math.random() - 0.5) * 4;
+    const y = 2.5 + Math.random() * 1.5;
+    const color = [0xffd34a, 0xff8a3a, 0xfff1c0, 0x9fe3ff][Math.floor(Math.random() * 4)];
+    this.fx.burst(x, y, z, 40, { color: [color, 0xffffff], speed: 2.6, up: 0.3, life: 1.1, size: 0.16, gravity: 2.5, drag: 1.2 });
   }
 
   animateDying(dt) {

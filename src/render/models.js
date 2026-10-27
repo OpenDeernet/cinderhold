@@ -320,7 +320,9 @@ export function makeHold() {
   root.add(mesh(G.cyl(0.02, 0.02, 5), mat(0x3a2a1e), { y: 1.7, sy: 0.8 }));
   const flag = mesh(G.box(), mat(0xd94a2b, { side: THREE.DoubleSide }), { x: 0.18, y: 1.92, sx: 0.36, sy: 0.22, sz: 0.01 });
   root.add(flag);
-  const fire = mesh(G.cone(6), mat(0xffa040, { emissive: 0xff6a00, emissiveIntensity: 2 }), { y: 1.38, s: 0.1, sy: 0.22, shadow: false });
+  // Own material: the world tints it when the Hold is hit, which must not
+  // leak into the shared material cache.
+  const fire = mesh(G.cone(6), mat(0xffa040, { emissive: 0xff6a00, emissiveIntensity: 2 }).clone(), { y: 1.38, s: 0.1, sy: 0.22, shadow: false });
   root.add(fire);
   return { root, flag, fire };
 }

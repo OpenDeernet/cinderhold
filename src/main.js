@@ -67,7 +67,21 @@ const actions = {
       feats('early');
     }
   },
-  selectBuild: (type) => setBuild(session?.buildType === type ? null : type),
+  selectBuild: (type) => {
+    if (!session || session.demo) return;
+    if (session.buildType === type) {
+      setBuild(null);
+      return;
+    }
+    const g = session.game;
+    if (g.towerAllowed(type) && g.gold < g.buildCost(type)) {
+      hud.nudge(type);
+      audio.play('error');
+      hud.toast(`Need ${g.buildCost(type) - g.gold} more gold`);
+      return;
+    }
+    setBuild(type);
+  },
   deselect: () => select(null),
   upgrade: () => {
     const t = session?.selected;

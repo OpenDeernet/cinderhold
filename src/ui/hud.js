@@ -225,6 +225,15 @@ export class Hud {
     this.buildType = type;
   }
 
+  // Shake a tower button that cannot be afforded.
+  nudge(type) {
+    const b = this.buildBtns[type]?.b;
+    if (!b) return;
+    b.classList.remove('nudge');
+    void b.offsetWidth;
+    b.classList.add('nudge');
+  }
+
   // ---------------------------------------------------------------- tower panel
 
   select(tower) {

@@ -899,7 +899,14 @@ export class World {
       for (const rec of this.towers.values()) this.animateTower(rec, dt, t);
       for (const rec of this.enemies.values()) this.animateEnemy(rec, dt, t);
       this.animateDying(dt);
-      for (const p of this.portals) p.swirl.rotation.x = t * 2;
+      // Portals flare while they are still spawning.
+      const active = game.spawners.length > 0;
+      for (const p of this.portals) {
+        p.swirl.rotation.x = t * (active ? 5 : 2);
+        const m = p.swirl.material;
+        const target = active ? 2.6 + Math.sin(t * 9) * 0.4 : 1.1;
+        m.emissiveIntensity += (target - m.emissiveIntensity) * Math.min(1, dt * 4);
+      }
       if (this.hold) {
         this.hold.flag.rotation.y = Math.sin(t * 3) * 0.3;
         this.hold.fire.scale.y = 0.22 + Math.sin(t * 17) * 0.03;

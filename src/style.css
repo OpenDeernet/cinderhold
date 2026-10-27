@@ -1207,6 +1207,18 @@ button {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
+.mvp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+.mvp b {
+  color: var(--ink);
+}
 .result .row {
   justify-content: center;
 }

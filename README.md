@@ -101,6 +101,8 @@ npm test               # unit tests + bot plays every level on Normal
 npm run playthrough    # per-level report: result, lives, kills, game time
 npm run playthrough -- --difficulty heroic
 npm run playthrough -- --endless
+npm run balance        # win rates per level, difficulty and bot skill
+npm run lint
 ```
 
 The campaign test fails if any level cannot be beaten on Normal, if the run

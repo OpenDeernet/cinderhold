@@ -351,6 +351,19 @@ button {
 .tower-btn.poor .cost {
   color: var(--bad);
 }
+.tower-btn.nudge {
+  animation: nudge 0.35s ease;
+}
+@keyframes nudge {
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
 .tower-btn[hidden] {
   display: none;
 }

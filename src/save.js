@@ -114,9 +114,10 @@ export class Save {
   }
 
   // Records a finished campaign battle. Returns what changed for the UI.
-  recordWin(id, stars, difficulty) {
+  recordWin(id, stars, difficulty, time) {
     const prev = this.level(id);
     const next = { ...prev, wins: (prev.wins || 0) + 1 };
+    if (time && (!prev.bestTime || time < prev.bestTime)) next.bestTime = time;
     next.stars = Math.max(prev.stars, stars);
     if (difficulty === 'heroic') next.heroic = true;
     this.data.levels[id] = next;

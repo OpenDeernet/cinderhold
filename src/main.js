@@ -193,7 +193,7 @@ function recordResult(abandoned = false) {
     save.persist();
     return { newBest };
   }
-  if (g.status === 'won' && !abandoned) return save.recordWin(g.level.id, g.stars(), g.difficulty);
+  if (g.status === 'won' && !abandoned) return save.recordWin(g.level.id, g.stars(), g.difficulty, g.time);
   save.persist();
   return null;
 }

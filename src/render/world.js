@@ -467,6 +467,16 @@ export class World {
     else this.minRing.root.visible = false;
   }
 
+  // Range preview for the tower under the cursor.
+  setHoverTower(tower) {
+    if (!tower || tower === this.selected) {
+      if (!this.ghost || !this.ghost.root.visible) this.ghostRing.root.visible = false;
+      return;
+    }
+    const { x, z } = this.toWorld(tower.x, tower.y);
+    this.showRing(this.ghostRing, x, z, tower.s.range, 0xffe08a);
+  }
+
   showRing(ring, x, z, radius, color) {
     ring.root.position.set(x, 0.03, z);
     ring.root.scale.set(radius, 1, radius);

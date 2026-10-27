@@ -538,6 +538,16 @@ export class World {
   addEnemy(e) {
     const model = makeEnemy(e.type);
     if (e.boss) model.root.scale.setScalar(e.type === 'colossus' ? 1.0 : 1.4);
+    if (e.air) {
+      // A soft blob on the ground so fliers read as being in the air.
+      const blob = new THREE.Mesh(
+        geo('blob', () => new THREE.CircleGeometry(0.32, 20).rotateX(-Math.PI / 2)),
+        this.blobMat || (this.blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })),
+      );
+      blob.position.y = -AIR_HEIGHT + 0.03;
+      blob.renderOrder = 1;
+      model.root.add(blob);
+    }
     this.root.add(model.root);
     const bar = this.makeBar(e);
     this.enemies.set(e.id, { model, bar, phase: Math.random() * 6.28, hitFlash: 0 });

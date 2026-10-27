@@ -40,6 +40,14 @@ describe('Save', () => {
     expect(s.recordWin(LEVELS[0].id, 3, 'heroic')).toEqual({ newStars: 1, firstWin: false, heroic: true });
   });
 
+  it('keeps the fastest winning time', () => {
+    const s = new Save();
+    s.recordWin(LEVELS[0].id, 3, 'normal', 300);
+    s.recordWin(LEVELS[0].id, 3, 'normal', 420);
+    s.recordWin(LEVELS[0].id, 3, 'normal', 250);
+    expect(s.level(LEVELS[0].id).bestTime).toBe(250);
+  });
+
   it('persists across instances', () => {
     const a = new Save();
     a.recordWin(LEVELS[0].id, 3, 'normal');

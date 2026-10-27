@@ -175,7 +175,10 @@ export class Screens {
       h('div.brief-stats', `${level.waves} waves · ${level.startGold} starting gold · ${this.save.data.perks.length} perks active`),
       h('div.label', 'Difficulty'),
       this.difficultyPicker(),
-      rec.stars ? h('div.muted', `Best: ${rec.stars} star${rec.stars > 1 ? 's' : ''}${rec.heroic ? ', Heroic cleared' : ''}`) : null,
+      rec.stars
+        ? h('div.muted', `Best: ${rec.stars} star${rec.stars > 1 ? 's' : ''}${rec.heroic ? ', Heroic cleared' : ''}`
+          + `${rec.bestTime ? ` · fastest win ${fmtTime(rec.bestTime)}` : ''}`)
+        : null,
       h('div.row',
         this.btn('Back', () => this.levels()),
         this.btn('Defend', () => this.ctx.actions.startLevel(idx, this.save.data.difficulty, false), 'primary'),

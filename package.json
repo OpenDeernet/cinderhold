@@ -16,7 +16,8 @@
     "test": "vitest run",
     "playthrough": "node scripts/playthrough.mjs",
     "balance": "node scripts/balance.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "ci": "npm run lint && npm test && npm run build && npm run playthrough"
   },
   "dependencies": {
     "three": "0.186.1"

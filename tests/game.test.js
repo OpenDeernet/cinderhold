@@ -106,6 +106,7 @@ describe('combat', () => {
     run(g, 200);
     expect(g.status).toBe('won');
     expect(g.stats.kills).toBeGreaterThan(5);
+    expect(g.stats.killsByType.grunt).toBe(g.stats.kills);
     expect(g.stats.leaks).toBe(0);
     expect(g.lives).toBe(20);
     expect(g.stars()).toBe(3);

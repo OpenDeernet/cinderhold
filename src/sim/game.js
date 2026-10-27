@@ -54,7 +54,7 @@ export class Game {
     this.nextId = 1;
     this.countdown = null;
     this.status = 'ready'; // ready | playing | won | lost
-    this.stats = { kills: 0, leaks: 0, goldEarned: 0, goldSpent: 0, built: 0, wavesCleared: 0 };
+    this.stats = { kills: 0, leaks: 0, goldEarned: 0, goldSpent: 0, built: 0, wavesCleared: 0, killsByType: {} };
   }
 
   // ---------------------------------------------------------------- queries
@@ -649,6 +649,7 @@ export class Game {
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
+      this.stats.killsByType[e.type] = (this.stats.killsByType[e.type] || 0) + 1;
       this.emit({ type: 'death', enemy: e, bounty });
       if (def.split) spawned.push(e);
     }

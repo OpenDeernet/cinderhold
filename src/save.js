@@ -24,7 +24,7 @@ function fresh() {
     settings: { ...DEFAULT_SETTINGS },
     playSeconds: 0,
     feats: [],
-    totals: { kills: 0, built: 0, battles: 0, wins: 0 },
+    totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {} },
   };
 }
 
@@ -155,6 +155,8 @@ export class Save {
   addTotals(stats, won) {
     const t = this.data.totals;
     t.kills += stats.kills;
+    t.byType = t.byType || {};
+    for (const [type, n] of Object.entries(stats.killsByType || {})) t.byType[type] = (t.byType[type] || 0) + n;
     t.built += stats.built;
     t.battles += 1;
     if (won) t.wins += 1;

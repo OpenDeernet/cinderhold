@@ -349,6 +349,7 @@ export class World {
       p.root.position.set(x, 0, z);
       p.root.rotation.y = -Math.atan2(b.y - a.y, b.x - a.x);
       this.root.add(p.root);
+      this.levelDisposables.push(p.swirl.material);
       return p;
     });
     this.hold = makeHold();

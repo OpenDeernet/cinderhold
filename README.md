@@ -119,6 +119,25 @@ npm run lint
 The campaign test fails if any level cannot be beaten on Normal, if the run
 stalls, or if the whole campaign takes less than an hour of game time.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and on pull requests:
+
+| Job | What it checks |
+| --- | --- |
+| lint | ESLint over the whole repo |
+| test | the Vitest suite on Node 20, 22 and 24 |
+| playthrough | the bot beats all ten levels on Normal (Heroic is reported only) |
+| build | a production build, uploaded as the `cinderhold-dist` artifact |
+
+Dependabot opens weekly npm updates and monthly action updates.
+
+The same checks run locally, without GitHub, with:
+
+```sh
+npm run ci
+```
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

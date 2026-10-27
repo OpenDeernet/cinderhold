@@ -135,8 +135,13 @@ Dependabot opens weekly npm updates and monthly action updates.
 The same checks run locally, without GitHub, with:
 
 ```sh
-npm run ci
+npm run ci          # run the pipeline
+npm run ci:report   # run it and post the result to GitHub as the ci/local status
 ```
+
+`ci:report` gives commits a check mark without GitHub-hosted runners. It needs
+a token with repo access in `GITHUB_TOKEN` (or a stored git credential) and
+refuses to run on a dirty working tree.
 
 ## License
 

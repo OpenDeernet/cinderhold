@@ -202,6 +202,7 @@ export class World {
     this.scene.remove(this.root);
     for (const d of this.levelDisposables || []) d.dispose();
     for (const id of [...this.enemies.keys()]) this.removeEnemy(id);
+    for (const rec of this.dying) this.disposeEnemyModel(rec);
     this.dying = [];
     this.root = null;
     this.game = null;
@@ -588,10 +589,16 @@ export class World {
     return { group, fg, sh, width };
   }
 
+  // Per-enemy materials (warden shields) are not cached and must be freed.
+  disposeEnemyModel(rec) {
+    rec.model.parts.shield?.material.dispose();
+  }
+
   removeEnemy(id) {
     const rec = this.enemies.get(id);
     if (!rec) return;
     this.root.remove(rec.model.root);
+    this.disposeEnemyModel(rec);
     this.scene.remove(rec.bar.group);
     rec.bar.fg.material.dispose();
     if (rec.bar.sh) rec.bar.sh.material.dispose();
@@ -1065,6 +1072,7 @@ export class World {
       const root = rec.model.root;
       if (rec.dying <= 0) {
         this.root.remove(root);
+        this.disposeEnemyModel(rec);
         this.dying.splice(i, 1);
         continue;
       }

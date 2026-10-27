@@ -1129,6 +1129,20 @@ button {
   accent-color: var(--accent);
 }
 
+.save-box {
+  width: 100%;
+  height: 140px;
+  resize: vertical;
+  font: 12px ui-monospace, Menlo, Consolas, monospace;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 8px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 .keys {
   width: 100%;
   border-collapse: collapse;

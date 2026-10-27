@@ -22,8 +22,9 @@ const MUSIC = {
 };
 
 export class Audio {
-  constructor(settings) {
-    this.settings = settings;
+  // Takes the Save so settings stay current when a save is imported.
+  constructor(save) {
+    this.save = save;
     this.ctx = null;
     this.last = {};
     this.voices = 0;
@@ -31,6 +32,10 @@ export class Audio {
     this.intensity = 0;
     this.step = 0;
     this.nextTime = 0;
+  }
+
+  get settings() {
+    return this.save.settings;
   }
 
   // Must be called from a user gesture handler.

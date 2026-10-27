@@ -13,7 +13,7 @@ import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
 
 const save = new Save();
-const audio = new Audio(save.settings);
+const audio = new Audio(save);
 const stage = document.getElementById('stage');
 const overlay = document.getElementById('overlay');
 
@@ -354,7 +354,7 @@ const PAN_KEYS = {
 };
 
 window.addEventListener('keydown', (e) => {
-  if (e.target instanceof HTMLInputElement) return;
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
   if (e.code === 'KeyM') {
     save.settings.muted = !save.settings.muted;
     save.persist();

@@ -163,6 +163,30 @@ export class Save {
     this.data.playSeconds += sec;
   }
 
+  // Save transfer between browsers: a plain JSON string.
+  exportString() {
+    return JSON.stringify(this.data);
+  }
+
+  importString(str) {
+    let parsed;
+    try {
+      parsed = JSON.parse(str);
+    } catch {
+      return false;
+    }
+    if (!parsed || parsed.version !== 1 || typeof parsed.levels !== 'object') return false;
+    const base = fresh();
+    this.data = {
+      ...base,
+      ...parsed,
+      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+      totals: { ...base.totals, ...parsed.totals },
+    };
+    this.persist();
+    return true;
+  }
+
   reset() {
     const settings = this.data.settings;
     this.data = fresh();

@@ -379,8 +379,39 @@ export class Screens {
       check('Reduce motion (no screen shake or flashes)', 'reduceMotion'),
       check('Show frame rate', 'showFps'),
       h('div.row',
+        this.btn('Transfer save', () => this.transfer(back)),
         this.btn('Reset progress', () => this.confirmReset(back), 'danger'),
         this.btn('Done', back, 'primary'),
+      ),
+    ));
+  }
+
+  transfer(back) {
+    const box = h('textarea.save-box', { spellcheck: false, value: this.save.exportString() });
+    const status = h('div.muted');
+    this.mount('transfer', h('div.panel.narrow',
+      h('h2', 'Transfer save'),
+      h('p', 'Copy this text to keep a backup or to move your progress to another browser. Paste a save here and press Load to restore it.'),
+      box,
+      status,
+      h('div.row',
+        this.btn('Copy', () => {
+          box.select();
+          navigator.clipboard?.writeText(box.value).then(
+            () => (status.textContent = 'Copied.'),
+            () => (status.textContent = 'Select the text and copy it manually.'),
+          );
+        }),
+        this.btn('Load', () => {
+          if (this.save.importString(box.value)) {
+            this.ctx.actions.applySettings();
+            status.textContent = 'Save loaded.';
+          } else {
+            this.ctx.audio.play('error');
+            status.textContent = 'That does not look like a Cinderhold save.';
+          }
+        }),
+        this.btn('Done', () => this.settings(back), 'primary'),
       ),
     ));
   }

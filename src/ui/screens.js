@@ -504,6 +504,8 @@ export class Screens {
     if (outcome?.firstWin && idx === 2) notes.push('Endless Siege unlocked');
     if (outcome?.heroic) notes.push('Heroic victory recorded');
     if (outcome?.newBest) notes.push('New endless record!');
+    // The tower that did the most damage this battle.
+    const mvp = game.towers.reduce((best, t) => (!best || t.damage > best.damage ? t : best), null);
     this.mount('result', h(`div.panel.narrow.result.${won ? 'won' : 'lost'}`,
       h('h2', title),
       stars,
@@ -512,6 +514,10 @@ export class Screens {
         : null,
       notes.length ? h('div.notes', notes.map((n) => h('div', n))) : null,
       h('table.stats', lines.map(([k, v]) => h('tr', h('td', k), h('td', v)))),
+      mvp && mvp.damage > 0
+        ? h('div.mvp', icon(mvp.type, 'icon'), h('span', 'Best tower: ', h('b', `${TOWERS[mvp.type].name} ${'I'.repeat(mvp.tier + 1)}`),
+          ` · ${mvp.kills} kills · ${Math.round(mvp.damage).toLocaleString()} damage`))
+        : null,
       h('div.row',
         this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(game.endless ? 'endless' : 'levels')),
         this.btn(won ? 'Replay' : 'Try again', () => a.restart(), won && next ? '' : 'primary'),

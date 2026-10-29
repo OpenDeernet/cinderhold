@@ -1286,6 +1286,148 @@ button {
   color: var(--ink-mute);
 }
 
+/* ------------------------------------------------------------ map workshop */
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 14px;
+  box-shadow: none;
+}
+.map-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.map-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.map-thumb {
+  width: 108px;
+  height: 72px;
+  border-radius: 6px;
+  image-rendering: pixelated;
+  flex: none;
+}
+.map-info {
+  flex: 1;
+  min-width: 0;
+}
+.map-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.import-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.code-input,
+.editor-field input,
+.editor-field select {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 9px 10px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.editor-panel {
+  max-width: 980px;
+}
+.editor-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-mute);
+}
+.editor-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.editor-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: none;
+}
+.tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: left;
+}
+.tool-btn.on {
+  border-color: var(--accent);
+  background: rgba(255, 138, 58, 0.22);
+}
+.tool-btn .swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.tool-key {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ink-mute);
+}
+.editor-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.editor-canvas {
+  width: 100%;
+  aspect-ratio: 18 / 12;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+}
+.editor-help {
+  margin: 8px 0 4px;
+}
+.editor-status {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.editor-status .err {
+  color: var(--bad);
+}
+.editor-status .warn {
+  color: var(--accent-2);
+}
+.editor-status .ok {
+  color: var(--good);
+}
+
 /* ------------------------------------------------------------ small screens */
 
 @media (max-width: 720px) {
@@ -1355,6 +1497,19 @@ button {
   }
   .codex {
     grid-template-columns: 1fr;
+  }
+  .editor-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .editor-body {
+    flex-direction: column;
+  }
+  .editor-tools {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .tool-key {
+    display: none;
   }
   .panel {
     padding: 16px;

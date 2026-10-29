@@ -8,6 +8,7 @@ import { World } from './render/world.js';
 import { Audio } from './audio/audio.js';
 import { Save } from './save.js';
 import { checkFeats } from './achievements.js';
+import { customLevel } from './sim/mapcodec.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
@@ -37,6 +38,16 @@ const actions = {
   },
   startLevel: (idx, difficulty, endless) => startBattle({ level: LEVELS[idx], levelIdx: idx, difficulty, endless, kind: 'campaign' }),
   startCustom: (spec) => startBattle(spec),
+  playMap: (id) => {
+    const m = save.getMap(id);
+    if (!m) return;
+    const { level, levelIdx } = customLevel(m, id);
+    startBattle({ level, levelIdx, difficulty: save.data.difficulty, kind: 'custom', mapId: id });
+  },
+  onCustomResult: (s, abandoned) => {
+    if (s.kind === 'custom' && s.game.status === 'won' && !abandoned) save.recordMapWin(s.spec.mapId);
+    return null;
+  },
   restart: () => {
     if (!session || session.demo) return;
     startBattle(session.spec);
@@ -46,6 +57,7 @@ const actions = {
     hud.detach();
     startDemo();
     if (where === 'endless') screens.endless();
+    else if (where === 'workshop') screens.workshop();
     else if (where === 'title') screens.title();
     else screens.levels();
   },

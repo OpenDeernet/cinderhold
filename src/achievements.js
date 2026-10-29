@@ -27,6 +27,8 @@ export const FEATS = [
   { id: 'endless20', name: 'Long Watch', blurb: 'Clear wave 20 in Endless Siege.', check: (c) => c.game.endless && c.game.stats.wavesCleared >= 20 },
   { id: 'endless40', name: 'Eternal Watch', blurb: 'Clear wave 40 in Endless Siege.', check: (c) => c.game.endless && c.game.stats.wavesCleared >= 40 },
   { id: 'stars', name: 'Constellation', blurb: 'Earn all 30 stars.', check: (c) => c.save.starsEarned() >= 30 },
+  { id: 'trial', name: 'Trial by Fire', blurb: 'Win a Daily Trial.', check: (c) => c.event === 'won' && c.battle.kind === 'daily' },
+  { id: 'streak', name: 'Unbroken', blurb: 'Win the Daily Trial three days in a row.', check: (c) => c.battle.kind === 'daily' && c.battle.streak >= 3 },
   { id: 'veteran', name: 'Veteran', blurb: 'Slay 10,000 enemies in total.', check: (c) => c.save.data.totals.kills >= 10000 },
 ];
 

@@ -579,7 +579,7 @@ button {
 .cards {
   position: absolute;
   left: 12px;
-  top: 64px;
+  top: 88px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1284,6 +1284,44 @@ button {
 .tier-table td:first-child {
   text-align: left;
   color: var(--ink-mute);
+}
+
+/* ------------------------------------------------------------ daily trial */
+
+.mod-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+.mod-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 90, 60, 0.12);
+  border-left: 3px solid var(--accent);
+}
+.mod-name {
+  font-weight: 800;
+}
+.mod-blurb {
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+.mods {
+  position: absolute;
+  top: 58px;
+  left: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  pointer-events: none !important;
+}
+.mod-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(140, 40, 20, 0.85);
+  border: 1px solid rgba(255, 120, 80, 0.5);
 }
 
 /* ------------------------------------------------------------ map workshop */

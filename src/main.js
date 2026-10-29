@@ -9,6 +9,7 @@ import { Audio } from './audio/audio.js';
 import { Save } from './save.js';
 import { checkFeats } from './achievements.js';
 import { customLevel } from './sim/mapcodec.js';
+import { dailyTrial, dateKey, streak } from './sim/daily.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
@@ -44,8 +45,20 @@ const actions = {
     const { level, levelIdx } = customLevel(m, id);
     startBattle({ level, levelIdx, difficulty: save.data.difficulty, kind: 'custom', mapId: id });
   },
+  playDaily: () => {
+    const t = dailyTrial(dateKey());
+    startBattle({
+      level: t.level, levelIdx: t.levelIdx, difficulty: save.data.difficulty, kind: 'daily', modifiers: t.modifiers, date: t.date,
+    });
+  },
   onCustomResult: (s, abandoned) => {
-    if (s.kind === 'custom' && s.game.status === 'won' && !abandoned) save.recordMapWin(s.spec.mapId);
+    const g = s.game;
+    const won = g.status === 'won' && !abandoned;
+    if (s.kind === 'custom' && won) save.recordMapWin(s.spec.mapId);
+    if (s.kind === 'daily') {
+      save.recordDaily(s.spec.date, { won, lives: g.lives, maxLives: g.maxLives, wavesCleared: g.stats.wavesCleared });
+      if (won) return { dailyStreak: streak(save.data.daily, s.spec.date) };
+    }
     return null;
   },
   restart: () => {
@@ -58,6 +71,7 @@ const actions = {
     startDemo();
     if (where === 'endless') screens.endless();
     else if (where === 'workshop') screens.workshop();
+    else if (where === 'daily') screens.daily();
     else if (where === 'title') screens.title();
     else screens.levels();
   },
@@ -166,6 +180,7 @@ function startBattle(spec) {
   audio.setMusic(level.theme);
   audio.setIntensity(0);
   hud.announce(level.name, endless ? 'Endless Siege' : level.intro, 'intro');
+  hud.setModifiers(modifiers);
 }
 
 function setPaused(p) {
@@ -197,7 +212,8 @@ function select(tower) {
 }
 
 function feats(event, extra = {}) {
-  const earned = checkFeats({ event, game: session.game, save, battle: { earlyCalls: session.earlyCalls }, ...extra });
+  const battle = { earlyCalls: session.earlyCalls, kind: session.kind, streak: streak(save.data.daily, dateKey()) };
+  const earned = checkFeats({ event, game: session.game, save, battle, ...extra });
   for (const f of earned) {
     hud.featCard(f);
     audio.play('upgrade', { force: true });

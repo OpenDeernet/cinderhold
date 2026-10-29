@@ -9,6 +9,8 @@ import { FEATS } from '../achievements.js';
 import { statLines } from './stats.js';
 import { MapEditor, mapThumbnail } from './editor.js';
 import { blankMap, decodeMap, encodeMap, TIERS } from '../sim/mapcodec.js';
+import { dailyTrial, dateKey, streak } from '../sim/daily.js';
+import { modifierById } from '../sim/data/modifiers.js';
 import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
 
@@ -88,6 +90,7 @@ export class Screens {
         this.btn(s.starsEarned() ? 'Continue Campaign' : 'Begin Campaign', () => this.levels(), 'primary'),
         this.btn(s.endlessUnlocked() ? 'Endless Siege' : 'Endless Siege (clear level 3)', () => this.endless(), s.endlessUnlocked() ? '' : 'locked'),
         this.btn(h('span', 'War Council ', h('span.pill', icon('star', 'icon tiny'), ` ${s.starsFree()}/${stars}`)), () => this.perks()),
+        this.btn(h('span', 'Daily Trial ', s.dailyResult(dateKey())?.won ? h('span.pill', '✓ done') : h('span.pill', 'new')), () => this.daily()),
         this.btn('Map Workshop', () => this.workshop()),
         this.btn('Codex', () => this.codex()),
         this.btn(h('span', 'Records ', h('span.pill', `${s.data.feats.length}/${FEATS.length}`)), () => this.records()),
@@ -217,6 +220,38 @@ export class Screens {
       h('p.muted', 'Every tower, every enemy, no end. Waves grow tougher forever; how long can the Hold stand? Perks apply.'),
       grid,
       h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  // ---------------------------------------------------------------- daily trial
+
+  daily() {
+    const s = this.save;
+    const today = dateKey();
+    const trial = dailyTrial(today);
+    const res = s.dailyResult(today);
+    const run = streak(s.data.daily, today);
+    let result;
+    if (!res) result = 'Not attempted yet today.';
+    else if (res.won) result = `Won with ${res.lives} of ${res.maxLives} lives left${res.attempts > 1 ? ` (${res.attempts} attempts)` : ''}.`;
+    else result = `Best so far: ${res.wavesCleared} of ${trial.level.waves} waves (${res.attempts} attempt${res.attempts > 1 ? 's' : ''}).`;
+    this.mount('daily', h('div.panel.narrow',
+      h('div.kicker', today),
+      h('h2', 'Daily Trial'),
+      h('p.intro', `${trial.level.name} · ${THEME_NAMES[trial.level.theme]} · ${trial.level.waves} waves`),
+      h('div.mod-list', trial.modifiers.map((id) => {
+        const m = modifierById(id);
+        return h('div.mod-card', h('div.mod-name', m.name), h('div.mod-blurb', m.blurb));
+      })),
+      h('p.muted', 'Every player gets the same trial today. All towers are available; your perks and chosen difficulty apply.'),
+      h('div.brief-stats', result),
+      h('div.brief-stats', run ? `Current streak: ${run} day${run > 1 ? 's' : ''}` : 'Win today to start a streak.'),
+      h('div.label', 'Difficulty'),
+      this.difficultyPicker(),
+      h('div.row',
+        this.btn('Back', () => this.title()),
+        this.btn(res?.won ? 'Play again' : 'Take the trial', () => this.ctx.actions.playDaily(), 'primary'),
+      ),
     ));
   }
 
@@ -583,6 +618,7 @@ export class Screens {
 
   backTarget(game) {
     if (game.level.id.startsWith('custom:')) return 'workshop';
+    if (game.level.id.startsWith('daily:')) return 'daily';
     return game.endless ? 'endless' : 'levels';
   }
 
@@ -619,6 +655,7 @@ export class Screens {
     if (outcome?.firstWin && idx === 2) notes.push('Endless Siege unlocked');
     if (outcome?.heroic) notes.push('Heroic victory recorded');
     if (outcome?.newBest) notes.push('New endless record!');
+    if (outcome?.dailyStreak) notes.push(`Daily Trial won · streak ${outcome.dailyStreak}`);
     // The tower that did the most damage this battle.
     const mvp = game.towers.reduce((best, t) => (!best || t.damage > best.damage ? t : best), null);
     this.mount('result', h(`div.panel.narrow.result.${won ? 'won' : 'lost'}`,

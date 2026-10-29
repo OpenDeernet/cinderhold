@@ -3,6 +3,7 @@ import { ENEMIES } from '../sim/data/enemies.js';
 import { waveSummary } from '../sim/waves.js';
 import { clear, fill, h, icon } from './dom.js';
 import { statLines } from './stats.js';
+import { modifierById } from '../sim/data/modifiers.js';
 
 const MODE_LABEL = { first: 'First', last: 'Last', strong: 'Strongest', close: 'Closest' };
 
@@ -71,13 +72,15 @@ export class Hud {
     this.bossBar = h('div.boss-bar', this.bossName, h('div.boss-track', this.bossFill));
     this.bossBar.hidden = true;
 
+    this.modsEl = h('div.mods');
+
     this.announceEl = h('div.announce');
     this.cards = h('div.cards');
     this.hint = h('div.hint');
     this.hint.hidden = true;
     this.vignette = h('div.vignette');
 
-    this.el.append(this.vignette, this.top, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
+    this.el.append(this.vignette, this.top, this.modsEl, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
   attach(game, { tutorial }) {
@@ -211,6 +214,15 @@ export class Hud {
 
   setBuild(type) {
     this.buildType = type;
+  }
+
+  // Active Daily Trial modifiers, under the resource counters.
+  setModifiers(ids) {
+    clear(this.modsEl);
+    for (const id of ids) {
+      const m = modifierById(id);
+      if (m) this.modsEl.appendChild(h('span.mod-chip', { title: m.blurb }, m.name));
+    }
   }
 
   // Shake a tower button that cannot be afforded.

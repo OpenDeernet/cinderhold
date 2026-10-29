@@ -2,6 +2,7 @@ import { LEVELS } from './sim/data/levels.js';
 import { PERKS } from './sim/data/perks.js';
 
 const KEY = 'cinderhold.save.v1';
+const MAX_CUSTOM_MAPS = 40;
 
 export const DEFAULT_SETTINGS = {
   master: 0.8,
@@ -24,6 +25,7 @@ function fresh() {
     settings: { ...DEFAULT_SETTINGS },
     playSeconds: 0,
     feats: [],
+    customMaps: [], // { id, name, theme, tier, waves, rows, updated, wins }
     totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {} },
   };
 }
@@ -164,6 +166,40 @@ export class Save {
 
   addPlayTime(sec) {
     this.data.playSeconds += sec;
+  }
+
+  // ---------------------------------------------------------------- custom maps
+
+  listMaps() {
+    return [...this.data.customMaps].sort((a, b) => b.updated - a.updated);
+  }
+
+  getMap(id) {
+    return this.data.customMaps.find((m) => m.id === id) || null;
+  }
+
+  // Inserts or updates a map; returns its id.
+  saveMap(map) {
+    const now = Date.now();
+    const id = map.id || `m${now.toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+    const entry = { ...this.getMap(id), ...map, id, rows: [...map.rows], updated: now };
+    entry.wins = entry.wins || 0;
+    this.data.customMaps = [...this.data.customMaps.filter((m) => m.id !== id), entry];
+    if (this.data.customMaps.length > MAX_CUSTOM_MAPS) this.data.customMaps = this.listMaps().slice(0, MAX_CUSTOM_MAPS);
+    this.persist();
+    return id;
+  }
+
+  deleteMap(id) {
+    this.data.customMaps = this.data.customMaps.filter((m) => m.id !== id);
+    this.persist();
+  }
+
+  recordMapWin(id) {
+    const m = this.getMap(id);
+    if (!m) return;
+    m.wins = (m.wins || 0) + 1;
+    this.persist();
   }
 
   // Save transfer between browsers: a plain JSON string.

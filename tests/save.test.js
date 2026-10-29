@@ -113,6 +113,28 @@ describe('Save', () => {
     expect(a.starsEarned()).toBe(3);
   });
 
+  it('stores, updates and deletes custom maps', () => {
+    const s = new Save();
+    const rows = LEVELS[0].map;
+    const id = s.saveMap({ name: 'A', theme: 'snow', tier: 'gentle', waves: 10, rows });
+    expect(s.getMap(id).name).toBe('A');
+    expect(s.saveMap({ id, name: 'B', theme: 'snow', tier: 'gentle', waves: 10, rows })).toBe(id);
+    expect(s.listMaps()).toHaveLength(1);
+    expect(s.getMap(id).name).toBe('B');
+    s.recordMapWin(id);
+    s.saveMap({ id, name: 'C', theme: 'snow', tier: 'gentle', waves: 10, rows });
+    expect(s.getMap(id).wins).toBe(1);
+    expect(new Save().getMap(id).name).toBe('C');
+    s.deleteMap(id);
+    expect(s.listMaps()).toEqual([]);
+  });
+
+  it('keeps at most 40 custom maps, newest first', () => {
+    const s = new Save();
+    for (let i = 0; i < 45; i++) s.saveMap({ id: `x${i}`, name: `M${i}`, theme: 'meadow', tier: 'gentle', waves: 10, rows: LEVELS[0].map });
+    expect(s.listMaps()).toHaveLength(40);
+  });
+
   it('remembers the best endless wave', () => {
     const s = new Save();
     expect(s.recordEndless(LEVELS[0].id, 12)).toBe(true);

@@ -8,6 +8,8 @@ const AUTO_WAVE_DELAY = 14;
 const SHIELD_REGEN_DELAY = 2.5;
 const MAX_TICKS_PER_UPDATE = 12;
 const FREE_SELL_WINDOW = 5;
+const TIMELINE_STEP = 3;
+const TIMELINE_MAX = 600;
 
 export const DIFFICULTY = {
   casual: { label: 'Casual', hp: 0.75, lives: 1.5, bounty: 1.1 },
@@ -56,6 +58,9 @@ export class Game {
     this.nextId = 1;
     this.countdown = null;
     this.status = 'ready'; // ready | playing | won | lost
+    // Sampled every few seconds for the post-battle chart.
+    this.timeline = [];
+    this.nextSample = 0;
     this.stats = { kills: 0, leaks: 0, goldEarned: 0, goldSpent: 0, built: 0, wavesCleared: 0, killsByType: {} };
   }
 
@@ -261,6 +266,14 @@ export class Game {
     this.updateProjectiles(dt);
     this.reap();
     this.updateFlow(dt);
+    if (this.time >= this.nextSample || this.isOver()) this.sample();
+  }
+
+  sample() {
+    this.nextSample = this.time + TIMELINE_STEP;
+    this.timeline.push({ t: this.time, lives: this.lives, gold: this.gold, enemies: this.enemies.length, wave: this.waveIndex });
+    // Long endless runs: halve the resolution instead of growing forever.
+    if (this.timeline.length > TIMELINE_MAX) this.timeline = this.timeline.filter((_, i) => i % 2 === 0 || i === this.timeline.length - 1);
   }
 
   updateSpawners(dt) {

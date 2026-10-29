@@ -127,6 +127,28 @@ describe('combat', () => {
     expect(g.stats.wavesCleared).toBe(4);
   });
 
+  it('samples a timeline for the result chart', () => {
+    const g = new Game({ level: { ...TEST_LEVEL, lives: 3 } });
+    g.callWave();
+    run(g, 200);
+    expect(g.status).toBe('lost');
+    const tl = g.timeline;
+    expect(tl.length).toBeGreaterThan(3);
+    expect(tl[0].lives).toBe(3);
+    expect(tl.at(-1).lives).toBe(0);
+    for (let i = 1; i < tl.length; i++) expect(tl[i].t).toBeGreaterThan(tl[i - 1].t);
+  });
+
+  it('keeps long timelines bounded', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    for (let i = 0; i < 2000; i++) {
+      g.time += 3;
+      g.sample();
+    }
+    expect(g.timeline.length).toBeLessThanOrEqual(600);
+    expect(g.timeline.at(-1).t).toBe(g.time);
+  });
+
   it('loses lives when enemies reach the Hold and ends at zero', () => {
     const g = new Game({ level: { ...TEST_LEVEL, lives: 3 } });
     g.callWave();

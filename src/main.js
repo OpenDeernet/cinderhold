@@ -35,10 +35,11 @@ const actions = {
     if (!session || !session.demo) startDemo();
     audio.setMusic('title');
   },
-  startLevel: (idx, difficulty, endless) => startBattle(idx, difficulty, endless),
+  startLevel: (idx, difficulty, endless) => startBattle({ level: LEVELS[idx], levelIdx: idx, difficulty, endless, kind: 'campaign' }),
+  startCustom: (spec) => startBattle(spec),
   restart: () => {
     if (!session || session.demo) return;
-    startBattle(session.game.levelIdx, session.game.difficulty, session.game.endless);
+    startBattle(session.spec);
   },
   quitToMenu: (where = 'levels') => {
     if (session && !session.demo && !session.recorded) recordResult(true);
@@ -132,15 +133,20 @@ function startDemo() {
   audio.setMusic('title');
 }
 
-function startBattle(idx, difficulty, endless) {
-  const level = LEVELS[idx];
-  const game = new Game({ level, levelIdx: idx, difficulty, perks: save.data.perks, endless });
+// spec: { level, levelIdx, difficulty, endless, kind, modifiers }. kind is
+// 'campaign' for the ten story levels; other kinds never touch campaign
+// progress. levelIdx sets the difficulty curve the wave generator uses.
+function startBattle(spec) {
+  const { level, levelIdx, difficulty, endless = false, kind = 'campaign', modifiers = [] } = spec;
+  const game = new Game({ level, levelIdx, difficulty, perks: save.data.perks, endless, modifiers });
   const speed = [1, 2, 3].includes(save.data.speed) ? save.data.speed : 1;
-  session = { game, demo: false, speed, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0 };
+  session = {
+    game, spec, kind, demo: false, speed, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0,
+  };
   world.controls.autoRotate = false;
   world.load(game);
   screens.hide();
-  hud.attach(game, { tutorial: idx === 0 && !endless && !save.data.tutorialDone });
+  hud.attach(game, { tutorial: kind === 'campaign' && levelIdx === 0 && !endless && !save.data.tutorialDone });
   audio.unlock();
   audio.setMusic(level.theme);
   audio.setIntensity(0);
@@ -188,6 +194,10 @@ function recordResult(abandoned = false) {
   session.recorded = true;
   save.addPlayTime(g.time);
   save.addTotals(g.stats, g.status === 'won' && !abandoned);
+  if (session.kind !== 'campaign') {
+    save.persist();
+    return actions.onCustomResult?.(session, abandoned) ?? null;
+  }
   if (g.endless) {
     const newBest = save.recordEndless(g.level.id, g.stats.wavesCleared);
     save.persist();
@@ -513,7 +523,7 @@ window.cinderhold = {
   },
   save,
   world,
-  start: (idx, difficulty = 'normal', endless = false) => startBattle(idx, difficulty, endless),
+  start: (idx, difficulty = 'normal', endless = false) => actions.startLevel(idx, difficulty, endless),
   // Lets the built-in bot play the current battle (used for soak testing).
   autoplay: () => {
     if (session && !session.demo) session.bot = new Bot(session.game);

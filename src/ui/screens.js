@@ -479,6 +479,8 @@ export class Screens {
 
   result(game, outcome) {
     const a = this.ctx.actions;
+    // Only campaign battles have a next level or a finale.
+    const campaign = LEVELS[game.levelIdx] === game.level;
     const idx = game.levelIdx;
     const won = game.status === 'won';
     const st = game.stats;
@@ -490,7 +492,7 @@ export class Screens {
         stars.appendChild(img);
       }
     }
-    const next = idx + 1 < LEVELS.length && this.save.isUnlocked(idx + 1) && !game.endless;
+    const next = campaign && idx + 1 < LEVELS.length && this.save.isUnlocked(idx + 1) && !game.endless;
     const lines = [
       ['Waves cleared', game.endless ? String(st.wavesCleared) : `${st.wavesCleared} / ${game.totalWaves}`],
       ['Enemies slain', String(st.kills)],
@@ -501,7 +503,7 @@ export class Screens {
     ];
     let title;
     if (game.endless) title = 'The Hold has fallen';
-    else title = won ? (game.levelIdx === LEVELS.length - 1 ? 'The ash tide is broken' : 'Victory') : 'The Hold has fallen';
+    else title = won ? (campaign && game.levelIdx === LEVELS.length - 1 ? 'The ash tide is broken' : 'Victory') : 'The Hold has fallen';
     const notes = [];
     if (outcome?.newStars > 0) notes.push(`+${outcome.newStars} star${outcome.newStars > 1 ? 's' : ''} for the War Council`);
     if (outcome?.firstWin && next) notes.push(`${LEVELS[idx + 1].name} unlocked`);
@@ -513,7 +515,7 @@ export class Screens {
     this.mount('result', h(`div.panel.narrow.result.${won ? 'won' : 'lost'}`,
       h('h2', title),
       stars,
-      won && game.levelIdx === LEVELS.length - 1 && !game.endless
+      won && campaign && game.levelIdx === LEVELS.length - 1 && !game.endless
         ? h('p.intro', 'The furnace at the heart of the ash has gone cold. The valley will remember who held the line.')
         : null,
       notes.length ? h('div.notes', notes.map((n) => h('div', n))) : null,

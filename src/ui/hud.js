@@ -239,7 +239,7 @@ export class Hud {
       return;
     }
     const up = g.upgradeCost(t);
-    const key = `${t.id}|${t.tier}|${t.mode}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
+    const key = `${t.id}|${t.tier}|${t.mode}|${g.canSell()}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
     const a = this.ctx.actions;
@@ -267,7 +267,9 @@ export class Hud {
         up !== null
           ? h(`button.hbtn.upgrade${g.gold >= up ? '' : '.poor'}`, { title: 'Upgrade (U)', onclick: () => a.upgrade() }, 'Upgrade ', icon('coin', 'icon tiny'), String(up))
           : h('button.hbtn.upgrade', { disabled: true }, 'Max tier'),
-        h('button.hbtn.sell', { title: 'Sell (X)', onclick: () => a.sell() }, 'Sell ', icon('coin', 'icon tiny'), String(g.sellValue(t))),
+        g.canSell()
+          ? h('button.hbtn.sell', { title: 'Sell (X)', onclick: () => a.sell() }, 'Sell ', icon('coin', 'icon tiny'), String(g.sellValue(t)))
+          : h('button.hbtn.sell', { disabled: true, title: 'No Retreat: towers cannot be sold' }, 'No selling'),
       ),
     );
   }

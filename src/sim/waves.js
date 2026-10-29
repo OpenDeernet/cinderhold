@@ -61,12 +61,21 @@ export function generateWave(level, levelIdx, w, spawnCount, opts = {}) {
   if (chosen.length === 0) chosen.push(available[0]);
 
   const weights = chosen.map((t, i) => (fresh.includes(t) ? 1.2 : 1) * (1 + rng.next() * 0.6) / (1 + i * 0.25));
+
+  // Daily Trial modifiers: Skyborne adds a flight of wisps to every wave,
+  // Frenzy packs every group twice as tightly.
+  const mods = opts.modifiers || new Set();
+  if (mods.has('skyborne') && !chosen.includes('wisp')) {
+    chosen.push('wisp');
+    weights.push(0.5);
+  }
   const total = weights.reduce((a, b) => a + b, 0);
+  const packing = mods.has('frenzy') ? 0.5 : 1;
 
   chosen.forEach((type, i) => {
     const share = (budget * weights[i]) / total;
     const count = Math.max(1, Math.round(share / ENEMIES[type].threat));
-    const interval = SPAWN_INTERVAL[type];
+    const interval = SPAWN_INTERVAL[type] * packing;
     // Large groups are split across spawns so multi-road maps stay busy.
     if (spawnCount > 1 && count >= 6) {
       const per = Math.ceil(count / spawnCount);

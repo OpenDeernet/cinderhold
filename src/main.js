@@ -104,7 +104,10 @@ const actions = {
   sell: () => {
     const t = session?.selected;
     if (!t) return;
-    session.game.sell(t.id);
+    if (!session.game.sell(t.id)) {
+      audio.play('error');
+      return;
+    }
     select(null);
   },
   cycleTarget: () => {

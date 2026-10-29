@@ -7,6 +7,7 @@ import { THEMES } from '../render/themes.js';
 import { THEME_NAMES } from '../sim/data/themes.js';
 import { FEATS } from '../achievements.js';
 import { statLines } from './stats.js';
+import { battleChart } from './chart.js';
 import { MapEditor, mapThumbnail } from './editor.js';
 import { blankMap, decodeMap, encodeMap, TIERS } from '../sim/mapcodec.js';
 import { dailyTrial, dateKey, streak } from '../sim/daily.js';
@@ -666,6 +667,7 @@ export class Screens {
         : null,
       notes.length ? h('div.notes', notes.map((n) => h('div', n))) : null,
       h('table.stats', lines.map(([k, v]) => h('tr', h('td', k), h('td', v)))),
+      battleChart(game.timeline),
       mvp && mvp.damage > 0
         ? h('div.mvp', icon(mvp.type, 'icon'), h('span', 'Best tower: ', h('b', `${TOWERS[mvp.type].name} ${'I'.repeat(mvp.tier + 1)}`),
           ` · ${mvp.kills} kills · ${Math.round(mvp.damage).toLocaleString()} damage`))

@@ -4,16 +4,20 @@
 // ctx: { event, game, save, battle } where battle holds per-battle counters
 // kept by main.js (early calls, peak tower count).
 
+// Custom maps and trials can be tuned to be easy; campaign feats need the
+// real thing.
+const isCampaign = (c) => !c.game.endless && (c.battle.kind ?? 'campaign') === 'campaign';
+
 export const FEATS = [
   { id: 'first', name: 'First Light', blurb: 'Win your first battle.', check: (c) => c.event === 'won' },
   {
     id: 'flawless', name: 'Not One Step', blurb: 'Win a campaign battle without a single leak.',
-    check: (c) => c.event === 'won' && !c.game.endless && c.game.stats.leaks === 0,
+    check: (c) => c.event === 'won' && isCampaign(c) && c.game.stats.leaks === 0,
   },
   { id: 'heroic', name: 'Heroic', blurb: 'Win any battle on Heroic.', check: (c) => c.event === 'won' && c.game.difficulty === 'heroic' },
   {
     id: 'campaign', name: 'Ash Breaker', blurb: 'Win the final battle at Cinderhold.',
-    check: (c) => c.event === 'won' && c.game.level.id === 'cinderhold' && !c.game.endless,
+    check: (c) => c.event === 'won' && c.game.level.id === 'cinderhold' && isCampaign(c),
   },
   { id: 'colossus', name: 'Giant Killer', blurb: 'Bring down an Ashen Colossus.', check: (c) => c.event === 'death' && c.enemy?.type === 'colossus' },
   { id: 'stormwing', name: 'Clear Skies', blurb: 'Bring down a Stormwing.', check: (c) => c.event === 'death' && c.enemy?.type === 'stormwing' },
@@ -21,7 +25,7 @@ export const FEATS = [
   { id: 'architect', name: 'Architect', blurb: 'Have 30 towers standing at once.', check: (c) => c.game.towers.length >= 30 },
   {
     id: 'frugal', name: 'Frugal', blurb: 'Win a campaign battle having built no more than 8 towers.',
-    check: (c) => c.event === 'won' && !c.game.endless && c.game.stats.built <= 8,
+    check: (c) => c.event === 'won' && isCampaign(c) && c.game.stats.built <= 8,
   },
   { id: 'bugler', name: 'Impatient', blurb: 'Call 10 waves early in one battle.', check: (c) => c.battle.earlyCalls >= 10 },
   { id: 'endless20', name: 'Long Watch', blurb: 'Clear wave 20 in Endless Siege.', check: (c) => c.game.endless && c.game.stats.wavesCleared >= 20 },

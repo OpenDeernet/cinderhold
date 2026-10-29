@@ -1,6 +1,6 @@
 {
   "name": "cinderhold",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A 3D tower-defense game for the browser, built with Three.js.",
   "private": true,
   "type": "module",

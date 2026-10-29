@@ -23,9 +23,13 @@ heart of the ash.
   early-wave bonuses, 1×/2×/3× speed.
 - **Three difficulties**, star ratings, and a **War Council** of twelve perks
   bought with stars (refundable at any time).
-- **14 feats** to earn, lifetime records, per-level best times, and save
+- **16 feats** to earn, a battle chart on every result screen, lifetime records, per-level best times, and save
   export/import for moving progress between browsers.
 - **Endless Siege** on any cleared map, with its own escalating roster.
+- **Daily Trial**: one map and two of nine rule-bending modifiers, the same
+  for every player each day, with a win streak.
+- **Map Workshop**: paint your own battlefields with live route preview and
+  validation, play them on any difficulty, and share them as short codes.
 - **Codex** with full per-tier tower stats and enemy kill counts, an in-game
   tutorial on the first level, and a live bot-played battle behind the title
   screen.
@@ -90,6 +94,8 @@ src/
     waves.js      seeded wave generator
     game.js       the game state machine (fixed 30 Hz ticks)
     bot.js        auto-player used by tests, the playthrough script and the title demo
+    daily.js      Daily Trial generation and win streaks
+    mapcodec.js   custom map validation and share codes
   render/         Three.js scene: board, models, effects, camera
   audio/          Web Audio sound effects and generative music
   ui/             HUD and menu screens (plain DOM)

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0
+
+- Map Workshop: a tile editor with undo/redo, live route preview and
+  validation; custom maps are saved, played with your difficulty and perks,
+  and shared as `CH1.` codes.
+- Daily Trial: a date-seeded map with two of nine modifiers (Swift Tide,
+  Ironclad, Stubborn, Skyborne, Frenzy, Lean Times, Dear Stone, Fragile
+  Walls, No Retreat), best result per day and a win streak.
+- Result screens chart lives, gold and enemies over the battle.
+- Two new feats for the Daily Trial; campaign feats no longer trigger on
+  custom maps.
+- CI split into lint, Node 20/22/24 tests, playthrough and build jobs, plus
+  Dependabot and `npm run ci` / `npm run ci:report` for running it locally.
+
 ## 1.1.0
 
 - Feats (14 achievements), a Records screen with lifetime stats, kills per

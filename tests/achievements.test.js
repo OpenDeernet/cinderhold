@@ -35,6 +35,14 @@ describe('feats', () => {
     expect(got).toEqual(expect.arrayContaining(['first', 'flawless', 'heroic', 'frugal']));
   });
 
+  it('do not award campaign feats for custom maps', () => {
+    const save = new Save();
+    const game = new Game({ level: LEVELS[0] });
+    game.stats.built = 3;
+    const got = checkFeats({ save, game, event: 'won', battle: { earlyCalls: 0, kind: 'custom' } }).map((f) => f.id);
+    expect(got).toEqual(['first']);
+  });
+
   it('track boss kills and max upgrades from events', () => {
     const save = new Save();
     const game = new Game({ level: LEVELS[0] });

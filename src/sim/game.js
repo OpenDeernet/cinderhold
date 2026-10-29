@@ -36,8 +36,9 @@ export class Game {
     this.map = parseMap(level.map);
 
     this.maxLives = Math.round(level.lives * this.diff.lives) + (this.perks.has('walls') ? 5 : 0);
+    if (this.modifiers.has('fragile')) this.maxLives = Math.min(this.maxLives, 8);
     this.lives = this.maxLives;
-    this.gold = level.startGold + (this.perks.has('purse') ? 50 : 0) + (endless ? 150 : 0);
+    this.gold = level.startGold + (this.perks.has('purse') ? 50 : 0) + (endless ? 150 : 0) + (this.modifiers.has('lean') ? 150 : 0);
 
     this.totalWaves = endless ? Infinity : level.waves;
     this.waveIndex = 0; // next wave to launch
@@ -65,6 +66,7 @@ export class Game {
       this.waveCache.set(i, generateWave(this.level, this.levelIdx, i, this.map.routes.length, {
         endless: this.endless,
         budgetScale: this.diff.budget,
+        modifiers: this.modifiers,
       }));
     }
     return this.waveCache.get(i);
@@ -79,7 +81,7 @@ export class Game {
   }
 
   priceFactor() {
-    return this.perks.has('tools') ? 0.92 : 1;
+    return (this.perks.has('tools') ? 0.92 : 1) * (this.modifiers.has('dear') ? 1.2 : 1);
   }
 
   buildCost(type) {
@@ -178,9 +180,13 @@ export class Game {
     return true;
   }
 
+  canSell() {
+    return !this.modifiers.has('nosell') || this.status === 'ready';
+  }
+
   sell(id) {
     const i = this.towers.findIndex((x) => x.id === id);
-    if (i < 0 || this.isOver()) return false;
+    if (i < 0 || this.isOver() || !this.canSell()) return false;
     const t = this.towers[i];
     const value = this.sellValue(t);
     this.gold += value;
@@ -275,7 +281,7 @@ export class Game {
     // Bosses already have huge base health; scaling them as hard as the rank
     // and file makes mid-level bosses unkillable.
     if (def.boss) scale = Math.pow(scale, 0.6);
-    const hp = Math.round(def.hp * scale * this.diff.hp);
+    const hp = Math.round(def.hp * scale * this.diff.hp * (this.modifiers.has('stubborn') ? 1.4 : 1));
     const shield = def.shield ? Math.round(def.shield * scale * this.diff.hp) : 0;
     const e = {
       id: this.nextId++,
@@ -292,8 +298,8 @@ export class Game {
       maxHp: hp,
       shield,
       maxShield: shield,
-      armor: def.armor || 0,
-      speed: def.speed,
+      armor: (def.armor || 0) + (this.modifiers.has('ironclad') ? 4 : 0),
+      speed: def.speed * (this.modifiers.has('swift') ? 1.25 : 1),
       air: !!def.air,
       boss: !!def.boss,
       slowMul: 1,
@@ -646,7 +652,7 @@ export class Game {
         this.emit({ type: 'leak', enemy: e, lives: def.lives });
         continue;
       }
-      const bounty = Math.round(def.bounty * (1 + 0.03 * e.wave) * this.diff.bounty * (this.perks.has('bounty') ? 1.1 : 1));
+      const bounty = Math.round(def.bounty * (1 + 0.03 * e.wave) * this.diff.bounty * (this.perks.has('bounty') ? 1.1 : 1) * this.bountyMod());
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
@@ -693,6 +699,13 @@ export class Game {
     }
     this.countdown -= dt;
     if (this.countdown <= 0) this.launchWave();
+  }
+
+  bountyMod() {
+    let m = 1;
+    if (this.modifiers.has('lean')) m *= 0.65;
+    if (this.modifiers.has('stubborn')) m *= 1.2;
+    return m;
   }
 
   stars() {

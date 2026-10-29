@@ -20,7 +20,8 @@ export const DIFFICULTY = {
 // The whole rules engine. It knows nothing about rendering: the renderer and
 // audio read state and drain `events` after each update.
 export class Game {
-  constructor({ level, levelIdx = 0, difficulty = 'normal', perks = [], endless = false }) {
+  constructor({ level, levelIdx = 0, difficulty = 'normal', perks = [], endless = false, modifiers = [] }) {
+    this.modifiers = new Set(modifiers);
     this.level = level;
     this.levelIdx = levelIdx;
     this.difficulty = DIFFICULTY[difficulty] ? difficulty : 'normal';

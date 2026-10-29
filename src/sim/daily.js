@@ -6,6 +6,7 @@ import { createRng, hashString } from './rng.js';
 // so every player gets the same trial on the same day.
 
 const TRIAL_WAVES = 15;
+const TRIAL_GOLD = 80;
 const FIRST_MAP = 2; // the first two maps are too gentle to be a trial
 
 export function dateKey(d = new Date()) {
@@ -35,6 +36,8 @@ export function dailyTrial(date) {
     name: `Trial of ${base.name}`,
     intro: 'Today’s trial. Everyone faces the same map and the same twists.',
     waves: Math.min(base.waves, TRIAL_WAVES),
+    // Two modifiers usually hurt the opening; a little extra gold evens it.
+    startGold: base.startGold + TRIAL_GOLD,
     towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
     bosses: (base.bosses || []).filter((b) => b.wave < TRIAL_WAVES),
   };

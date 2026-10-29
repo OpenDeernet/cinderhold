@@ -23,14 +23,14 @@ describe('modifiers', () => {
 
   it('change enemy speed, armor and health', () => {
     const plain = game([]).spawnEnemy('grunt', 0, 1, 0);
-    expect(game(['swift']).spawnEnemy('grunt', 0, 1, 0).speed).toBeCloseTo(plain.speed * 1.25);
-    expect(game(['ironclad']).spawnEnemy('grunt', 0, 1, 0).armor).toBe(4);
+    expect(game(['swift']).spawnEnemy('grunt', 0, 1, 0).speed).toBeCloseTo(plain.speed * 1.2);
+    expect(game(['ironclad']).spawnEnemy('grunt', 0, 1, 0).armor).toBe(3);
     expect(game(['stubborn']).spawnEnemy('grunt', 0, 1, 0).maxHp).toBe(Math.round(plain.maxHp * 1.4));
   });
 
   it('change the economy', () => {
     expect(game(['lean']).gold).toBe(650);
-    expect(game(['dear']).buildCost('bolt')).toBe(60);
+    expect(game(['dear']).buildCost('bolt')).toBe(57);
     expect(game(['lean']).bountyMod()).toBeCloseTo(0.65);
     expect(game(['stubborn']).bountyMod()).toBeCloseTo(1.2);
   });

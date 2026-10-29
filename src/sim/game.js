@@ -86,7 +86,7 @@ export class Game {
   }
 
   priceFactor() {
-    return (this.perks.has('tools') ? 0.92 : 1) * (this.modifiers.has('dear') ? 1.2 : 1);
+    return (this.perks.has('tools') ? 0.92 : 1) * (this.modifiers.has('dear') ? 1.15 : 1);
   }
 
   buildCost(type) {
@@ -311,8 +311,8 @@ export class Game {
       maxHp: hp,
       shield,
       maxShield: shield,
-      armor: (def.armor || 0) + (this.modifiers.has('ironclad') ? 4 : 0),
-      speed: def.speed * (this.modifiers.has('swift') ? 1.25 : 1),
+      armor: (def.armor || 0) + (this.modifiers.has('ironclad') ? 3 : 0),
+      speed: def.speed * (this.modifiers.has('swift') ? 1.2 : 1),
       air: !!def.air,
       boss: !!def.boss,
       slowMul: 1,

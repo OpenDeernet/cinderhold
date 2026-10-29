@@ -25,6 +25,7 @@ function fresh() {
     settings: { ...DEFAULT_SETTINGS },
     playSeconds: 0,
     feats: [],
+    daily: {}, // date -> { won, lives, maxLives, wavesCleared, attempts }
     customMaps: [], // { id, name, theme, tier, waves, rows, updated, wins }
     totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {} },
   };
@@ -166,6 +167,26 @@ export class Save {
 
   addPlayTime(sec) {
     this.data.playSeconds += sec;
+  }
+
+  // ---------------------------------------------------------------- daily trial
+
+  dailyResult(date) {
+    return this.data.daily[date] || null;
+  }
+
+  // Keeps the best attempt for the day: a win beats a loss, more lives or
+  // more waves beat fewer.
+  recordDaily(date, { won, lives, maxLives, wavesCleared }) {
+    const prev = this.data.daily[date];
+    const attempts = (prev?.attempts || 0) + 1;
+    const better = !prev || (won && !prev.won) || (won === prev.won && (won ? lives > prev.lives : wavesCleared > prev.wavesCleared));
+    this.data.daily[date] = better ? { won, lives, maxLives, wavesCleared, attempts } : { ...prev, attempts };
+    // Old trials are only needed for the streak; keep two months.
+    const dates = Object.keys(this.data.daily).sort();
+    for (const d of dates.slice(0, Math.max(0, dates.length - 60))) delete this.data.daily[d];
+    this.persist();
+    return better;
   }
 
   // ---------------------------------------------------------------- custom maps

@@ -7,6 +7,8 @@ import { THEMES } from '../render/themes.js';
 import { THEME_NAMES } from '../sim/data/themes.js';
 import { FEATS } from '../achievements.js';
 import { statLines } from './stats.js';
+import { MapEditor, mapThumbnail } from './editor.js';
+import { blankMap, decodeMap, encodeMap, TIERS } from '../sim/mapcodec.js';
 import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
 
@@ -51,12 +53,16 @@ export class Screens {
   }
 
   hide() {
+    this.cleanup?.();
+    this.cleanup = null;
     clear(this.el);
     this.el.hidden = true;
     this.current = null;
   }
 
-  mount(name, node, { dim = true } = {}) {
+  mount(name, node, { dim = true, cleanup = null } = {}) {
+    this.cleanup?.();
+    this.cleanup = cleanup;
     clear(this.el);
     this.el.hidden = false;
     this.el.className = dim ? 'screens dim' : 'screens';
@@ -82,6 +88,7 @@ export class Screens {
         this.btn(s.starsEarned() ? 'Continue Campaign' : 'Begin Campaign', () => this.levels(), 'primary'),
         this.btn(s.endlessUnlocked() ? 'Endless Siege' : 'Endless Siege (clear level 3)', () => this.endless(), s.endlessUnlocked() ? '' : 'locked'),
         this.btn(h('span', 'War Council ', h('span.pill', icon('star', 'icon tiny'), ` ${s.starsFree()}/${stars}`)), () => this.perks()),
+        this.btn('Map Workshop', () => this.workshop()),
         this.btn('Codex', () => this.codex()),
         this.btn(h('span', 'Records ', h('span.pill', `${s.data.feats.length}/${FEATS.length}`)), () => this.records()),
         this.btn('Settings', () => this.settings(() => this.title())),
@@ -211,6 +218,105 @@ export class Screens {
       grid,
       h('div.row', this.btn('Back', () => this.title())),
     ));
+  }
+
+  // ---------------------------------------------------------------- map workshop
+
+  workshop(message = '') {
+    const s = this.save;
+    const maps = s.listMaps();
+    const status = h('div.muted', message);
+    const code = h('input.code-input', { type: 'text', placeholder: 'Paste a map code (CH1.…)', spellcheck: false });
+    const list = h('div.map-list');
+    if (!maps.length) list.appendChild(h('p.muted', 'No maps yet. Start a new one, or paste a code someone shared with you.'));
+    for (const m of maps) {
+      const tier = TIERS.find((t) => t.id === m.tier)?.name || '';
+      list.appendChild(h('div.map-card',
+        mapThumbnail(m),
+        h('div.map-info',
+          h('div.level-name', m.name),
+          h('div.level-meta', `${THEME_NAMES[m.theme]} · ${tier} · ${m.waves} waves${m.wins ? ` · won ${m.wins}×` : ''}`),
+          h('div.map-actions',
+            this.btn('Play', () => this.ctx.actions.playMap(m.id), 'small.primary'),
+            this.btn('Edit', () => this.editor(m), 'small'),
+            this.btn('Delete', () => this.confirmDelete(m), 'small.danger'),
+          ),
+        ),
+      ));
+    }
+    this.mount('workshop', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'Map Workshop'), this.btn('New map', () => this.editor(blankMap()), 'primary')),
+      h('p.muted', 'Design your own battlefields, play them with any difficulty and perks, and share them as short codes. Custom maps never affect campaign stars.'),
+      list,
+      h('div.import-row', code, this.btn('Import', () => {
+        try {
+          const m = decodeMap(code.value);
+          const id = s.saveMap(m);
+          this.workshop(`Imported “${s.getMap(id).name}”.`);
+        } catch (e) {
+          this.ctx.audio.play('error');
+          status.textContent = e.message;
+        }
+      })),
+      status,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
+  confirmDelete(m) {
+    this.mount('delete-map', h('div.panel.narrow',
+      h('h2', 'Delete map?'),
+      h('p', `“${m.name}” will be gone for good. Copy its share code first if you might want it back.`),
+      h('div.row',
+        this.btn('Cancel', () => this.workshop()),
+        this.btn('Delete', () => {
+          this.save.deleteMap(m.id);
+          this.workshop();
+        }, 'danger'),
+      ),
+    ));
+  }
+
+  editor(map) {
+    const status = h('div.muted');
+    const playBtn = this.btn('Save & play', () => {
+      const id = this.save.saveMap(ed.map);
+      this.ctx.actions.playMap(id);
+    }, 'primary');
+    const ed = new MapEditor(map, {
+      onChange: (_, v) => {
+        playBtn.disabled = !v.ok;
+      },
+    });
+    const save = () => {
+      ed.map.id = this.save.saveMap(ed.map);
+      status.textContent = `Saved “${ed.map.name}”.`;
+    };
+    this.mount('editor', h('div.panel.wide.editor-panel',
+      h('div.panel-head', h('h2', map.id ? 'Edit map' : 'New map')),
+      ed.controls(),
+      h('div.editor-body',
+        ed.toolbar,
+        h('div.editor-canvas-wrap', ed.canvas),
+      ),
+      h('p.muted.editor-help', 'Left-drag paints, right-drag erases to ground, 1–7 pick a tile, Ctrl+Z undoes. Dashed lines show the path enemies will take.'),
+      ed.status,
+      status,
+      h('div.row',
+        this.btn('Back', () => this.workshop()),
+        this.btn('Clear', () => ed.clearAll(), 'danger'),
+        this.btn('Copy code', () => {
+          const text = encodeMap(ed.map);
+          navigator.clipboard?.writeText(text).then(
+            () => (status.textContent = 'Share code copied.'),
+            () => (status.textContent = text),
+          );
+        }),
+        this.btn('Save', save),
+        playBtn,
+      ),
+    ), { cleanup: () => ed.destroy() });
+    ed.refresh();
   }
 
   // ---------------------------------------------------------------- perks
@@ -470,9 +576,14 @@ export class Screens {
         this.btn('Settings', () => this.settings(() => this.pause(game))),
         document.fullscreenEnabled ? this.btn('Toggle fullscreen (G)', () => toggleFullscreen()) : null,
         this.btn('How to Play', () => this.help(() => this.pause(game))),
-        this.btn('Abandon battle', () => a.quitToMenu()),
+        this.btn('Abandon battle', () => a.quitToMenu(this.backTarget(game))),
       ),
     ));
+  }
+
+  backTarget(game) {
+    if (game.level.id.startsWith('custom:')) return 'workshop';
+    return game.endless ? 'endless' : 'levels';
   }
 
   result(game, outcome) {
@@ -523,7 +634,7 @@ export class Screens {
           ` · ${mvp.kills} kills · ${Math.round(mvp.damage).toLocaleString()} damage`))
         : null,
       h('div.row',
-        this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(game.endless ? 'endless' : 'levels')),
+        this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(this.backTarget(game))),
         this.btn(won ? 'Replay' : 'Try again', () => a.restart(), won && next ? '' : 'primary'),
         won && next ? this.btn('Next battle', () => this.briefing(idx + 1), 'primary') : null,
       ),

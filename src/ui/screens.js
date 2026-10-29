@@ -4,13 +4,11 @@ import { TOWERS, TOWER_ORDER, towerTier } from '../sim/data/towers.js';
 import { ENEMIES, ENEMY_ORDER } from '../sim/data/enemies.js';
 import { DIFFICULTY } from '../sim/game.js';
 import { THEMES } from '../render/themes.js';
+import { THEME_NAMES } from '../sim/data/themes.js';
 import { FEATS } from '../achievements.js';
 import { statLines } from './stats.js';
 import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
-const THEME_NAMES = {
-  meadow: 'Meadow', autumn: 'Autumn', desert: 'Desert', snow: 'Snow', swamp: 'Fen', volcanic: 'Caldera',
-};
 
 const BACK_LABELS = ['Back', 'Cancel', 'Done', 'Resume'];
 

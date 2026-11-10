@@ -1150,6 +1150,12 @@ button {
   -webkit-user-select: text;
 }
 
+.help-sub {
+  margin: 16px 0 4px;
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+
 .keys {
   width: 100%;
   border-collapse: collapse;

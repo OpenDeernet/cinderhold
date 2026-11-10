@@ -11,6 +11,14 @@ import { FloatText, Lightning, Particles, Rings } from './effects.js';
 import { coverageMap } from '../sim/coverage.js';
 
 const AIR_HEIGHT = 1.15;
+
+// Signal colours: "can / healthy" and "cannot / hurt". The colour-blind
+// palette swaps green-red for blue-orange, which stays distinct for the
+// common forms of colour blindness.
+export const PALETTES = {
+  standard: { ok: 0x9dffb0, okEmissive: 0x2a8a3a, bad: 0xff8a8a, badEmissive: 0x8a2a2a, hpHigh: 0x5ad04a, hpLow: 0xe0402a },
+  colorblind: { ok: 0x7ec8ff, okEmissive: 0x1f5a9a, bad: 0xffb04a, badEmissive: 0x8a5010, hpHigh: 0x3a9cff, hpLow: 0xff9a1a },
+};
 const QUALITY = {
   low: { shadows: false, shadowSize: 0, pixelRatio: 1, particles: 0.5 },
   medium: { shadows: true, shadowSize: 1024, pixelRatio: 1.25, particles: 0.8 },
@@ -133,6 +141,17 @@ export class World {
     this.portrait = portrait;
   }
 
+  setPalette(name) {
+    this.palette = PALETTES[name] || PALETTES.standard;
+    const p = this.palette;
+    this.ghostMats.ok.color.set(p.ok);
+    this.ghostMats.ok.emissive.set(p.okEmissive);
+    this.ghostMats.bad.color.set(p.bad);
+    this.ghostMats.bad.emissive.set(p.badEmissive);
+    this.hpHigh.set(p.hpHigh);
+    this.hpLow.set(p.hpLow);
+  }
+
   makeCursorObjects() {
     const hl = new THREE.Mesh(
       geo('tileHl', () => new THREE.PlaneGeometry(0.96, 0.96).rotateX(-Math.PI / 2)),
@@ -158,9 +177,12 @@ export class World {
     this.scene.add(this.minRing.root);
 
     this.ghostMats = {
-      ok: new THREE.MeshStandardMaterial({ color: 0x8dffa8, transparent: true, opacity: 0.5, emissive: 0x2a8a3a, depthWrite: false }),
-      bad: new THREE.MeshStandardMaterial({ color: 0xff7a7a, transparent: true, opacity: 0.5, emissive: 0x8a2a2a, depthWrite: false }),
+      ok: new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5, depthWrite: false }),
+      bad: new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5, depthWrite: false }),
     };
+    this.hpHigh = new THREE.Color();
+    this.hpLow = new THREE.Color();
+    this.setPalette('standard');
     this.ghost = null;
     this.ghostType = null;
   }
@@ -477,7 +499,7 @@ export class World {
     this.ghost.root.position.set(x, 0, z);
     this.ghost.root.visible = true;
     const s = this.game ? this.game.towerStats(type, 0) : TOWERS[type].tiers[0];
-    this.showRing(this.ghostRing, x, z, s.range, valid ? 0x9dffb0 : 0xff8a8a);
+    this.showRing(this.ghostRing, x, z, s.range, valid ? this.palette.ok : this.palette.bad);
     if (s.minRange) this.showRing(this.minRing, x, z, s.minRange);
     else this.minRing.root.visible = false;
   }
@@ -1132,7 +1154,7 @@ export class World {
       const f = Math.max(0, e.hp / e.maxHp);
       bar.fg.scale.x = Math.max(0.001, bar.width * f);
       bar.fg.position.x = -(bar.width * (1 - f)) / 2;
-      bar.fg.material.color.setHSL(0.33 * f, 0.75, 0.5);
+      bar.fg.material.color.copy(this.hpLow).lerp(this.hpHigh, f);
       if (bar.sh) {
         const s = e.maxShield ? e.shield / e.maxShield : 0;
         bar.sh.visible = s > 0;

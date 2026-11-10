@@ -1692,3 +1692,9 @@ body.photo-mode #overlay {
     padding: 16px;
   }
 }
+
+/* Colour-blind friendly signal colours for HUD elements. */
+body.colorblind {
+  --good: #7ec8ff;
+  --bad: #ffb04a;
+}

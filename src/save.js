@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   quality: 'high',
   showFps: false,
   heatmap: true,
+  colorblind: false,
   reduceMotion: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
 };
 

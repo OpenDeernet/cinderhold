@@ -147,6 +147,8 @@ const actions = {
   applySettings: () => {
     audio.applyVolumes();
     world.reduceMotion = save.settings.reduceMotion;
+    world.setPalette(save.settings.colorblind ? 'colorblind' : 'standard');
+    document.body.classList.toggle('colorblind', !!save.settings.colorblind);
     refreshHeatmap();
     if (world.quality !== save.settings.quality) world.setQuality(save.settings.quality);
   },
@@ -157,6 +159,8 @@ const actions = {
 };
 
 world.reduceMotion = save.settings.reduceMotion;
+world.setPalette(save.settings.colorblind ? 'colorblind' : 'standard');
+document.body.classList.toggle('colorblind', !!save.settings.colorblind);
 
 const ctx = { save, audio, actions };
 const hud = new Hud(document.getElementById('hud'), ctx);
@@ -363,7 +367,7 @@ function showCursor(tile, fromPad) {
   if (session.buildType) {
     const ok = g.canBuild(session.buildType, tile.c, tile.r);
     world.setGhost(session.buildType, tile, ok);
-    world.setHover(tile, ok ? 0x9dffb0 : 0xff8a8a);
+    world.setHover(tile, ok ? world.palette.ok : world.palette.bad);
     canvas.style.cursor = ok ? 'copy' : 'not-allowed';
   } else {
     const t = g.towerAt(tile.c, tile.r);

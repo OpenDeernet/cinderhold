@@ -4,6 +4,7 @@ import { waveSummary, waveTraits } from '../sim/waves.js';
 import { clear, fill, h, icon } from './dom.js';
 import { statLines } from './stats.js';
 import { Minimap } from './minimap.js';
+import { DamageMeter } from './meter.js';
 import { modifierById } from '../sim/data/modifiers.js';
 import { ABILITIES, ABILITY_ORDER } from '../sim/data/abilities.js';
 
@@ -83,6 +84,7 @@ export class Hud {
     }
 
     this.minimap = new Minimap((x, y) => this.ctx.actions.lookAt(x, y));
+    this.meter = new DamageMeter();
 
     this.tip = h('div.tip');
     this.tip.hidden = true;
@@ -106,7 +108,7 @@ export class Hud {
     this.hint.hidden = true;
     this.vignette = h('div.vignette');
 
-    this.el.append(this.vignette, this.top, this.modsEl, this.planning, this.bossBar, this.waveBox, this.minimap.canvas, this.bar, this.abilityBar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
+    this.el.append(this.vignette, this.top, this.modsEl, this.planning, this.bossBar, this.waveBox, this.minimap.canvas, this.meter.el, this.bar, this.abilityBar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
   attach(game, { tutorial, replay = false }) {
@@ -190,6 +192,7 @@ export class Hud {
     set('preview', g.waveIndex, () => this.renderPreview(g));
 
     this.minimap.update(1 / 60);
+    this.meter.update(g, 1 / 60);
     this.updateBoss(g);
     this.updateAbilities(g, session);
     if (this.selected) this.updatePanel();

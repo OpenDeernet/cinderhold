@@ -82,6 +82,7 @@ browser's localStorage.
 | Esc / P | Cancel, deselect, pause |
 | G | Toggle fullscreen |
 | N | Show or hide the minimap |
+| K | Damage meter |
 | O | Photo mode; Enter saves a PNG of the view |
 | M | Mute |
 

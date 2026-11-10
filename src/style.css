@@ -1419,6 +1419,65 @@ button {
   display: none;
 }
 
+/* ------------------------------------------------------------ damage meter */
+
+.meter {
+  position: absolute;
+  left: 12px;
+  top: 120px;
+  width: 250px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  pointer-events: none !important;
+}
+.meter[hidden] {
+  display: none;
+}
+.meter-head {
+  font-weight: 800;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+}
+.meter-empty {
+  color: var(--ink-mute);
+}
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0;
+}
+.meter-bar {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  opacity: 0.55;
+}
+.meter-label {
+  position: relative;
+  padding-left: 6px;
+  line-height: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.meter-val {
+  width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
 /* ------------------------------------------------------------ abilities */
 
 .ability-bar {

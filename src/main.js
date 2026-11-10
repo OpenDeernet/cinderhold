@@ -14,6 +14,7 @@ import { makeReplay, ReplayDriver } from './sim/replay.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
+import { GamepadInput } from './input/gamepad.js';
 
 const save = new Save();
 const audio = new Audio(save);
@@ -328,11 +329,22 @@ const canvas = world.renderer.domElement;
 let down = null;
 let lastTile = null;
 let lastPointer = null;
+let padTile = null;
 
 function updateCursor() {
-  if (!session || session.demo || !lastPointer) return;
+  if (!session || session.demo) return;
+  if (padTile && !lastPointer) {
+    showCursor(padTile, true);
+    return;
+  }
+  if (!lastPointer) return;
+  showCursor(world.pickTile(lastPointer.x, lastPointer.y), false);
+}
+
+// Highlights a tile, with a build ghost when a tower is being placed. The
+// gamepad cursor always shows its tile, even on empty ground.
+function showCursor(tile, fromPad) {
   const g = session.game;
-  const tile = world.pickTile(lastPointer.x, lastPointer.y);
   lastTile = tile;
   if (!tile) {
     world.setHover(null);
@@ -349,7 +361,7 @@ function updateCursor() {
   } else {
     const t = g.towerAt(tile.c, tile.r);
     world.setGhost(null);
-    world.setHover(t ? tile : null, 0xffe08a);
+    world.setHover(t || fromPad ? tile : null, t ? 0xffe08a : 0xffffff);
     world.setHoverTower(t);
     canvas.style.cursor = t ? 'pointer' : 'default';
   }
@@ -357,6 +369,7 @@ function updateCursor() {
 
 canvas.addEventListener('pointermove', (e) => {
   lastPointer = { x: e.clientX, y: e.clientY };
+  padTile = null;
   updateCursor();
 });
 
@@ -531,6 +544,107 @@ canvas.addEventListener('webglcontextlost', (e) => {
   if (session && !session.demo) setPaused(true);
 });
 
+// ---------------------------------------------------------------- gamepad
+
+const pad = new GamepadInput();
+let padAnnounced = false;
+
+function handleGamepad(dt) {
+  const input = pad.update(dt);
+  if (pad.connected && !padAnnounced) {
+    padAnnounced = true;
+    if (session && !session.demo) hud.toast('Controller connected');
+  }
+  if (!pad.connected) return;
+  if (screens.current) {
+    menuPad(input);
+    return;
+  }
+  if (!session || session.demo) return;
+  if (input.camera.x || input.camera.y) world.orbit(input.camera.x * dt * 2, input.camera.y * dt * 10);
+  if (input.move) movePadCursor(input.move.dx, input.move.dy);
+  for (const intent of input.presses) padIntent(intent);
+}
+
+function movePadCursor(dx, dy) {
+  const { w, h } = session.game.map;
+  if (!padTile) padTile = lastTile || { c: Math.floor(w / 2), r: Math.floor(h / 2) };
+  // Up on the stick is away from the camera, whichever way it faces.
+  const [mx, my] = world.screenToGrid(dx, dy);
+  padTile = { c: Math.max(0, Math.min(w - 1, padTile.c + mx)), r: Math.max(0, Math.min(h - 1, padTile.r + my)) };
+  lastPointer = null;
+  updateCursor();
+}
+
+function padIntent(intent) {
+  const g = session.game;
+  switch (intent) {
+    case 'confirm':
+      if (!padTile) movePadCursor(0, 0);
+      else if (session.replay) select(g.towerAt(padTile.c, padTile.r));
+      else click(padTile, false);
+      break;
+    case 'cancel':
+      if (session.buildType || session.selected) {
+        setBuild(null);
+        select(null);
+      }
+      break;
+    case 'upgrade':
+      actions.upgrade();
+      break;
+    case 'sell':
+      actions.sell();
+      break;
+    case 'wave':
+      actions.callWave();
+      break;
+    case 'speed':
+      actions.setSpeed((session.speed % 3) + 1);
+      break;
+    case 'ranges':
+      world.setShowRanges(!world.showRanges);
+      break;
+    case 'pause':
+      actions.togglePause();
+      break;
+    case 'prevTower':
+    case 'nextTower': {
+      const allowed = TOWER_ORDER.filter((t) => g.towerAllowed(t));
+      const i = allowed.indexOf(session.buildType);
+      const step = intent === 'nextTower' ? 1 : -1;
+      const next = allowed[(i + step + allowed.length + (i < 0 && step < 0 ? 1 : 0)) % allowed.length];
+      if (commandable()) {
+        session.buildType = null;
+        actions.selectBuild(next);
+      }
+      if (!padTile) movePadCursor(0, 0);
+      else updateCursor();
+      break;
+    }
+  }
+}
+
+// In menus the pad moves focus between buttons, A presses, B goes back.
+function menuPad(input) {
+  const buttons = [...document.querySelectorAll('#screens button:not([disabled])')];
+  if (!buttons.length) return;
+  if (input.move) {
+    const i = buttons.indexOf(document.activeElement);
+    const step = input.move.dy || input.move.dx;
+    buttons[(i < 0 ? 0 : i + step + buttons.length) % buttons.length].focus();
+  }
+  for (const intent of input.presses) {
+    if (intent === 'confirm') {
+      const el = document.activeElement;
+      if (el instanceof HTMLButtonElement && el.closest('#screens')) el.click();
+      else buttons[0].focus();
+    } else if (intent === 'cancel' || (intent === 'pause' && screens.current === 'pause')) {
+      screens.back();
+    }
+  }
+}
+
 // ---------------------------------------------------------------- loop
 
 // If a battle runs well below 35 fps for several seconds, step graphics
@@ -554,6 +668,7 @@ function frame(now) {
   const realDt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
   if (realDt > 0) fpsAvg += (1 / realDt - fpsAvg) * 0.05;
+  handleGamepad(realDt);
   if (!session) return;
 
   const g = session.game;

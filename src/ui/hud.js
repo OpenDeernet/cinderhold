@@ -252,7 +252,7 @@ export class Hud {
       return;
     }
     const up = g.upgradeCost(t);
-    const key = `${t.id}|${t.tier}|${t.mode}|${g.canSell()}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
+    const key = `${t.id}|${t.tier}|${t.mode}|${t.boost}|${g.towers.length}|${g.canSell()}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
     const a = this.ctx.actions;
@@ -274,9 +274,13 @@ export class Hud {
         h('button.close', { title: 'Close (Esc)', 'aria-label': 'Close', onclick: () => a.deselect() }, '×'),
       ),
       h('table.tp-stats', rows),
-      h('div.tp-record', `${t.kills} kills · ${Math.round(t.damage)} damage`),
+      def.kind === 'aura'
+        ? h('div.tp-record', `Boosting ${g.towers.filter((o) => o !== t && o.boost && (o.x - t.x) ** 2 + (o.y - t.y) ** 2 <= t.s.range ** 2).length} towers`)
+        : h('div.tp-record', `${t.kills} kills · ${Math.round(t.damage)} damage${t.boost ? ` · banner +${Math.round(t.boost * 100)}%` : ''}`),
       h('div.tp-actions',
-        h('button.hbtn.target', { title: 'Targeting (T)', onclick: () => a.cycleTarget() }, `Target: ${MODE_LABEL[t.mode]}`),
+        def.kind === 'aura'
+          ? h('div.tp-aura', 'Boosts every tower inside its ring. Banners do not stack.')
+          : h('button.hbtn.target', { title: 'Targeting (T)', onclick: () => a.cycleTarget() }, `Target: ${MODE_LABEL[t.mode]}`),
         up !== null
           ? h(`button.hbtn.upgrade${g.gold >= up ? '' : '.poor'}`, { title: 'Upgrade (U)', onclick: () => a.upgrade() }, 'Upgrade ', icon('coin', 'icon tiny'), String(up))
           : h('button.hbtn.upgrade', { disabled: true }, 'Max tier'),

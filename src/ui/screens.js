@@ -413,7 +413,9 @@ export class Screens {
             h('div.codex-name', t.name),
             h('div.codex-blurb', t.blurb),
             h('div.codex-stats',
-              `${t.hitsAir ? (t.hitsGround ? 'Ground & air' : 'Air') : 'Ground only'} · ${t.damageType === 'energy' ? 'Ignores armor' : 'Physical'}`,
+              t.kind === 'aura'
+                ? 'Support · boosts nearby towers'
+                : `${t.hitsAir ? (t.hitsGround ? 'Ground & air' : 'Air') : 'Ground only'} · ${t.damageType === 'energy' ? 'Ignores armor' : 'Physical'}`,
             ),
             table,
           ),

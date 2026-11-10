@@ -183,6 +183,9 @@ const actions = {
 };
 
 world.reduceMotion = save.settings.reduceMotion;
+world.onThunder = () => {
+  if (session && !session.demo) audio.play('thunder', { force: true });
+};
 world.setPalette(save.settings.colorblind ? 'colorblind' : 'standard');
 document.body.classList.toggle('colorblind', !!save.settings.colorblind);
 

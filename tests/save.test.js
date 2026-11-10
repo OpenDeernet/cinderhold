@@ -113,6 +113,42 @@ describe('Save', () => {
     expect(a.starsEarned()).toBe(3);
   });
 
+  it('rejects malformed perk and level containers without replacing progress', () => {
+    const save = new Save();
+    save.recordWin(LEVELS[0].id, 3, 'normal');
+    const original = store.get(KEY);
+    for (const value of [
+      { version: 1, levels: {}, perks: null },
+      { version: 1, levels: {}, perks: [null] },
+      { version: 1, levels: null },
+      { version: 1, levels: [] },
+    ]) {
+      expect(save.importString(JSON.stringify(value))).toBe(false);
+      expect(store.get(KEY)).toBe(original);
+      expect(save.starsEarned()).toBe(3);
+      expect(new Save().starsEarned()).toBe(3);
+    }
+    expect(save.importString(JSON.stringify({ version: 1, levels: {} }))).toBe(true);
+    expect(new Save().data.perks).toEqual([]);
+  });
+
+  it('rejects malformed progress collections without replacing an existing save', () => {
+    const save = new Save();
+    save.recordWin(LEVELS[0].id, 3, 'normal');
+    const original = store.get(KEY);
+    for (const key of ['seen', 'feats', 'customMaps', 'daily', 'settings', 'totals']) {
+      expect(save.importString(JSON.stringify({ version: 1, levels: {}, [key]: null }))).toBe(false);
+      expect(store.get(KEY)).toBe(original);
+      const reloaded = new Save();
+      expect(reloaded.starsEarned()).toBe(3);
+      expect(reloaded.markSeen('fictional')).toBe(true);
+      expect(reloaded.hasFeat('fictional')).toBe(false);
+      expect(reloaded.listMaps()).toEqual([]);
+      // Restore the original after markSeen persisted its change.
+      store.set(KEY, original);
+    }
+  });
+
   it('stores, updates and deletes custom maps', () => {
     const s = new Save();
     const rows = LEVELS[0].map;

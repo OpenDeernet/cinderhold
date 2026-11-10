@@ -84,6 +84,11 @@ browser's localStorage.
 Touch: tap to build or select, one-finger drag pans, two fingers zoom and
 rotate.
 
+Gamepad (standard layout): the left stick or D-pad moves a tile cursor, A
+builds or selects, B cancels, LB/RB pick a tower, X upgrades, LT sells, Y
+sends the wave, RT changes speed, the right stick orbits and zooms, Start
+pauses and Back shows every range. Menus work with the D-pad, A and B.
+
 ## Project layout
 
 ```

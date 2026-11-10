@@ -155,11 +155,11 @@ export const LEVELS = [
     id: 'frostmere',
     name: 'Frostmere Pass',
     theme: 'snow',
-    intro: 'The pass winds back and forth. Glass Wardens carry shields that regrow if you let them rest.',
+    intro: 'The pass winds back and forth. Glass Wardens carry shields that regrow if you let them rest. Plant a War Banner among your towers.',
     startGold: 300,
     lives: 20,
     waves: 18,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     pool: [
       { type: 'grunt', from: 0 },
       { type: 'runner', from: 0 },
@@ -191,7 +191,7 @@ export const LEVELS = [
     startGold: 320,
     lives: 20,
     waves: 20,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     pool: [
       { type: 'grunt', from: 0 },
       { type: 'runner', from: 0 },
@@ -224,7 +224,7 @@ export const LEVELS = [
     startGold: 340,
     lives: 20,
     waves: 20,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     pool: [
       { type: 'grunt', from: 0 },
       { type: 'runner', from: 0 },
@@ -260,7 +260,7 @@ export const LEVELS = [
     threat: 1.55,
     lives: 20,
     waves: 22,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     pool: [
       { type: 'grunt', from: 0 },
       { type: 'runner', from: 0 },
@@ -298,7 +298,7 @@ export const LEVELS = [
     startGold: 400,
     lives: 20,
     waves: 25,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     pool: [
       { type: 'grunt', from: 0 },
       { type: 'runner', from: 0 },

@@ -85,9 +85,23 @@ export const TOWERS = {
       { cost: 210, damage: 18, rate: 1.1, range: 2.3, burn: 32 },
     ],
   },
+  banner: {
+    id: 'banner',
+    name: 'War Banner',
+    blurb: 'Does not attack. Towers around it hit harder and fire faster. Banners do not stack.',
+    kind: 'aura',
+    hitsGround: false,
+    hitsAir: false,
+    damageType: 'energy',
+    tiers: [
+      { cost: 120, damage: 0, rate: 0, range: 1.6, boost: 0.15 },
+      { cost: 110, range: 1.8, boost: 0.22 },
+      { cost: 200, range: 2.1, boost: 0.3 },
+    ],
+  },
 };
 
-export const TOWER_ORDER = ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'];
+export const TOWER_ORDER = ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'];
 
 export const TARGET_MODES = ['first', 'last', 'strong', 'close'];
 

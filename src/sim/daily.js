@@ -38,7 +38,7 @@ export function dailyTrial(date) {
     waves: Math.min(base.waves, TRIAL_WAVES),
     // Two modifiers usually hurt the opening; a little extra gold evens it.
     startGold: base.startGold + TRIAL_GOLD,
-    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+    towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
     bosses: (base.bosses || []).filter((b) => b.wave < TRIAL_WAVES),
   };
   return { date, levelIdx, level, modifiers };

@@ -181,7 +181,7 @@ export function customLevel(m, id) {
       startGold: 280 + tier.levelIdx * 10,
       lives: 20,
       waves: meta.waves,
-      towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember'],
+      towers: ['bolt', 'cannon', 'frost', 'tesla', 'mortar', 'ember', 'banner'],
       pool: CUSTOM_POOL,
       bosses: meta.waves >= 20 ? [{ wave: meta.waves - 1, type: meta.waves >= 25 ? 'colossus' : 'stormwing' }] : [],
       map: m.rows,

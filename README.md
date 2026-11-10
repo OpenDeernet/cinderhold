@@ -72,6 +72,7 @@ browser's localStorage.
 | Right drag | Rotate the camera |
 | Wheel / pinch | Zoom |
 | Middle drag, WASD, arrow keys | Pan |
+| Q / E / Z | Meteor (then click a spot) / Frost Nova / War Chest |
 | C / Home | Reset the camera |
 | R | Show every tower's range |
 | H | Placement heatmap while building |

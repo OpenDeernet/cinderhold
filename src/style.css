@@ -1392,6 +1392,73 @@ button {
   color: var(--ink-mute);
 }
 
+/* ------------------------------------------------------------ abilities */
+
+.ability-bar {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+}
+.ability-bar[hidden],
+.ability-btn[hidden] {
+  display: none;
+}
+.ability-btn {
+  --cd: 0deg;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-edge);
+  background: var(--panel);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ability-btn .icon {
+  width: 40px;
+  height: 40px;
+  filter: grayscale(0.8) brightness(0.6);
+}
+.ability-btn.ready {
+  border-color: var(--accent);
+}
+.ability-btn.ready .icon {
+  filter: none;
+}
+.ability-btn.aiming {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 138, 58, 0.6), var(--shadow);
+}
+/* Cooldown sweep: a dark wedge that shrinks as the ability recharges. */
+.ability-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(rgba(0, 0, 0, 0.6) var(--cd), transparent 0);
+  pointer-events: none;
+}
+.ability-btn .cd {
+  position: absolute;
+  font-weight: 800;
+  font-size: 15px;
+  text-shadow: 0 1px 3px #000;
+  z-index: 1;
+}
+.ability-btn .hotkey {
+  position: absolute;
+  bottom: 2px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--ink-dim);
+  z-index: 1;
+}
+
 /* ------------------------------------------------------------ photo mode */
 
 body.photo-mode #hud,
@@ -1421,6 +1488,7 @@ body.photo-mode #overlay {
 
 /* ------------------------------------------------------------ replays */
 
+.hud.replay .ability-bar,
 .hud.replay .build-bar,
 .hud.replay .wave-btn,
 .hud.replay .tp-actions,
@@ -1750,6 +1818,13 @@ body.photo-mode #overlay {
     right: 12px;
     width: auto;
     bottom: 92px;
+  }
+  .ability-bar {
+    bottom: 84px;
+  }
+  .ability-btn {
+    width: 46px;
+    height: 46px;
   }
   .tip {
     display: none;

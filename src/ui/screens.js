@@ -639,6 +639,7 @@ export class Screens {
         row('Right drag', 'Rotate the camera'),
         row('Wheel / pinch', 'Zoom'),
         row('Middle drag, WASD, arrows', 'Pan'),
+        row('Q / E / Z', 'Meteor (then click a spot) / Frost Nova / War Chest'),
         row('C or Home', 'Reset the camera'),
         row('R', 'Show every tower\'s range'),
         row('H', 'Placement heatmap while building'),

@@ -238,6 +238,13 @@ export class Audio {
       case 'heal':
         this.tone({ freq: 520, to: 880, dur: 0.25, type: 'sine', vol: 0.05, attack: 0.05 });
         break;
+      case 'whoosh':
+        this.hiss({ dur: 0.9, freq: 300, to: 2400, type: 'bandpass', q: 2, vol: 0.2, attack: 0.5 });
+        break;
+      case 'nova':
+        this.hiss({ dur: 1.0, freq: 7000, to: 2000, type: 'highpass', vol: 0.14, attack: 0.05 });
+        [1568, 1976, 2349].forEach((f, i) => this.tone({ freq: f, dur: 0.6, type: 'sine', vol: 0.05, at: i * 0.05 }));
+        break;
       case 'dig':
         this.hiss({ dur: 0.25, freq: 250, to: 120, type: 'lowpass', vol: 0.12 });
         break;
@@ -304,6 +311,17 @@ export class Audio {
       case 'burrow':
       case 'surface':
         this.play('dig');
+        break;
+      case 'cast':
+        if (ev.ability === 'meteor') this.play('whoosh', { force: true });
+        if (ev.ability === 'nova') this.play('nova', { force: true });
+        break;
+      case 'meteor':
+        this.play('bigboom', { force: true });
+        this.play('bossDeath', { force: true });
+        break;
+      case 'chest':
+        this.play('upgrade', { force: true });
         break;
     }
   }

@@ -205,6 +205,7 @@ export const ENEMY_COLORS = {
   mender: 0x5b7a52,
   warden: 0x6f87a0,
   splitter: 0x7a5a48,
+  burrower: 0x6b4a36,
   colossus: 0x3a302c,
   stormwing: 0x34405e,
 };
@@ -288,6 +289,20 @@ export function makeEnemy(type) {
       body.add(mesh(G.box(), LAVA(), { x: 0.2, y: 0.35, sx: 0.02, sy: 0.24, sz: 0.04, rx: 0.4 }));
       eyes(0.4, 0.24, 0.07);
       break;
+    case 'burrower': {
+      // A segmented digger with a glowing drill snout.
+      for (let i = 0; i < 3; i++) {
+        body.add(mesh(G.sphere(8), mat(i % 2 ? 0x57392a : color), { x: -0.17 * i, y: 0.2 + i * 0.02, s: 0.2 - i * 0.03 }));
+      }
+      const drill = mesh(G.cone(6), LAVA(), { x: 0.24, y: 0.2, rz: -Math.PI / 2, s: 0.1, sy: 0.22 });
+      body.add(drill);
+      parts.drill = drill;
+      body.add(mesh(G.box(), mat(0x3a2a20), { x: 0.05, y: 0.06, z: 0.15, sx: 0.12, sy: 0.08, sz: 0.06 }));
+      body.add(mesh(G.box(), mat(0x3a2a20), { x: 0.05, y: 0.06, z: -0.15, sx: 0.12, sy: 0.08, sz: 0.06 }));
+      eyes(0.3, 0.13, 0.09, 0.035);
+      height = 0.6;
+      break;
+    }
     case 'colossus':
       body.add(mesh(G.box(), mat(color), { y: 0.9, sx: 1.0, sy: 1.1, sz: 1.2 }));
       body.add(mesh(G.box(), mat(0x2a2220), { y: 1.55, x: 0.1, sx: 0.6, sy: 0.4, sz: 0.6 }));

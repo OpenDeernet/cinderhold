@@ -122,6 +122,24 @@ function endlessHp(w) {
   return Math.pow(1.045, Math.max(0, w - 12));
 }
 
+// What a wave asks of the defence, for the forecast: fliers need anti-air,
+// armor wants energy damage, and so on.
+export function waveTraits(wave) {
+  const traits = new Set();
+  for (const g of wave.groups) {
+    const e = ENEMIES[g.type];
+    if (e.boss) traits.add('boss');
+    if (e.air) traits.add('air');
+    if (e.armor >= 4) traits.add('armored');
+    if (e.shield) traits.add('shielded');
+    if (e.heal) traits.add('healers');
+    if (e.burrow) traits.add('tunnellers');
+    if (e.speed >= 2) traits.add('fast');
+    if (g.count >= 25 && e.threat < 1) traits.add('swarm');
+  }
+  return [...traits];
+}
+
 export function waveSummary(wave) {
   const counts = {};
   for (const g of wave.groups) counts[g.type] = (counts[g.type] || 0) + g.count;

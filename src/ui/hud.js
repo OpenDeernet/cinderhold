@@ -1,6 +1,6 @@
 import { TOWERS, TOWER_ORDER } from '../sim/data/towers.js';
 import { ENEMIES } from '../sim/data/enemies.js';
-import { waveSummary } from '../sim/waves.js';
+import { waveSummary, waveTraits } from '../sim/waves.js';
 import { clear, fill, h, icon } from './dom.js';
 import { statLines } from './stats.js';
 import { modifierById } from '../sim/data/modifiers.js';
@@ -42,7 +42,12 @@ export class Hud {
     this.top.append(h('div.speeds', this.speedBtns), this.pauseBtn);
 
     // Wave control
-    this.preview = h('div.preview');
+    this.preview = h('div.preview', {
+      onclick: () => {
+        this.forecast = !this.forecast;
+        if (this.game) this.renderPreview(this.game);
+      },
+    });
     this.waveBtn = h('button.wave-btn', { onclick: () => a.callWave() });
     this.waveBox = h('div.wave-box', this.waveBtn, this.preview);
 
@@ -188,11 +193,27 @@ export class Hud {
     const wave = g.nextWave();
     if (!wave) return;
     const boss = wave.groups.some((x) => ENEMIES[x.type].boss);
-    this.preview.append(h('span.preview-label', boss ? 'Boss wave' : `Wave ${wave.index + 1}`));
-    for (const { type, count } of waveSummary(wave)) {
-      this.preview.append(h(`span.preview-item${ENEMIES[type].boss ? '.boss' : ''}`, { title: `${ENEMIES[type].name}: ${ENEMIES[type].blurb}` }, icon(type, 'icon small'), `×${count}`));
-    }
     this.preview.classList.toggle('boss', boss);
+    this.preview.append(this.waveRow(wave, boss ? 'Boss wave' : `Wave ${wave.index + 1}`));
+    // Click to see two more waves ahead.
+    if (this.forecast) {
+      for (let i = 1; i <= 2; i++) {
+        const idx = wave.index + i;
+        if (idx >= g.totalWaves) break;
+        this.preview.append(this.waveRow(g.wave(idx), `Wave ${idx + 1}`, true));
+      }
+    }
+    this.preview.title = this.forecast ? 'Click to hide the forecast' : 'Click to see the next waves';
+  }
+
+  waveRow(wave, label, dim = false) {
+    const row = h(`div.preview-row${dim ? '.dim' : ''}`, h('span.preview-label', label));
+    for (const { type, count } of waveSummary(wave)) {
+      row.append(h(`span.preview-item${ENEMIES[type].boss ? '.boss' : ''}`, { title: `${ENEMIES[type].name}: ${ENEMIES[type].blurb}` }, icon(type, 'icon small'), `×${count}`));
+    }
+    const traits = waveTraits(wave).filter((t) => t !== 'boss');
+    if (traits.length) row.append(h('span.traits', traits.map((t) => h(`span.trait.${t}`, t))));
+    return row;
   }
 
   // ---------------------------------------------------------------- build tooltip

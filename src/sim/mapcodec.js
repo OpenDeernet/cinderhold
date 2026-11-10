@@ -199,4 +199,5 @@ const CUSTOM_POOL = [
   { type: 'warden', from: 6 },
   { type: 'mender', from: 7 },
   { type: 'splitter', from: 9 },
+  { type: 'burrower', from: 11 },
 ];

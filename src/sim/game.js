@@ -11,6 +11,11 @@ const FREE_SELL_WINDOW = 5;
 const TIMELINE_STEP = 3;
 const TIMELINE_MAX = 600;
 
+// Alive, on the field and not tunnelling.
+function targetable(e) {
+  return !e.dead && e.d >= 0 && !e.hidden;
+}
+
 export const DIFFICULTY = {
   casual: { label: 'Casual', hp: 0.75, lives: 1.5, bounty: 1.1 },
   normal: { label: 'Normal', hp: 1, lives: 1, bounty: 1 },
@@ -348,6 +353,9 @@ export class Game {
       burnTime: 0,
       lastHit: -99,
       healTimer: def.heal ? def.heal.every : 0,
+      // Burrowers start on the surface and alternate with tunnelling.
+      hidden: false,
+      burrowTimer: def.burrow ? def.burrow.surface : 0,
       wave,
       dead: false,
       leaked: false,
@@ -383,6 +391,14 @@ export class Game {
       if (e.maxShield > 0 && e.shield < e.maxShield && this.time - e.lastHit > SHIELD_REGEN_DELAY) {
         e.shield = Math.min(e.maxShield, e.shield + e.maxShield * 0.12 * dt);
       }
+      if (def.burrow) {
+        e.burrowTimer -= dt;
+        if (e.burrowTimer <= 0) {
+          e.hidden = !e.hidden;
+          e.burrowTimer += e.hidden ? def.burrow.under : def.burrow.surface;
+          this.emit({ type: e.hidden ? 'burrow' : 'surface', enemy: e });
+        }
+      }
       if (def.heal) {
         e.healTimer -= dt;
         if (e.healTimer <= 0) {
@@ -400,7 +416,7 @@ export class Game {
       }
 
       const route = this.map.routes[e.route];
-      e.d += e.speed * e.slowMul * dt;
+      e.d += e.speed * e.slowMul * (e.hidden ? def.burrow.speed : 1) * dt;
       if (e.d >= route.length) {
         e.leaked = true;
         e.dead = true;
@@ -426,7 +442,7 @@ export class Game {
     let best = null;
     let bestScore = -Infinity;
     for (const e of this.enemies) {
-      if (e.dead || e.d < 0) continue;
+      if (!targetable(e)) continue;
       if (e.air ? !def.hitsAir : !def.hitsGround) continue;
       const d2 = (e.x - t.x) ** 2 + (e.y - t.y) ** 2;
       if (d2 > r2 || d2 < min2) continue;
@@ -571,7 +587,7 @@ export class Game {
       let next = null;
       let nd = Infinity;
       for (const e of this.enemies) {
-        if (e.dead || hit.has(e.id) || e.d < 0) continue;
+        if (!targetable(e) || hit.has(e.id)) continue;
         const d2 = (e.x - cur.x) ** 2 + (e.y - cur.y) ** 2;
         if (d2 <= r2 && d2 < nd) {
           nd = d2;
@@ -588,7 +604,7 @@ export class Game {
     const r2 = s.range * s.range;
     let any = false;
     for (const e of this.enemies) {
-      if (e.dead || e.air || e.d < 0) continue;
+      if (!targetable(e) || e.air) continue;
       if ((e.x - t.x) ** 2 + (e.y - t.y) ** 2 > r2) continue;
       any = true;
       this.damage(e, this.dmgOf(t), 'energy', t);
@@ -622,7 +638,9 @@ export class Game {
         continue;
       }
       const found = p.target ? this.enemyById.get(p.target) : null;
-      const target = found && !found.dead ? found : null;
+      // A target that died or went underground is lost; the shot lands
+      // where it last was.
+      const target = found && !found.dead && !found.hidden ? found : null;
       if (target) {
         p.tx = target.x;
         p.ty = target.y;
@@ -650,7 +668,7 @@ export class Game {
     if (p.splash > 0) {
       const r2 = p.splash * p.splash;
       for (const e of this.enemies) {
-        if (e.dead || e.d < 0) continue;
+        if (!targetable(e)) continue;
         if (e.air ? !def.hitsAir : !def.hitsGround) continue;
         // Splash from a shell aimed at the ground never reaches fliers, and a
         // frost shard aimed at a flier only splashes other fliers.

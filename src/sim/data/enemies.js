@@ -35,6 +35,11 @@ export const ENEMIES = {
     split: { type: 'swarm', count: 3 },
     blurb: 'Bursts into cinderlings when it breaks.',
   },
+  burrower: {
+    id: 'burrower', name: 'Cinder Mole', hp: 120, armor: 2, speed: 1.0, bounty: 11, threat: 3.5, lives: 1,
+    burrow: { surface: 3.5, under: 1.5, speed: 1.3 },
+    blurb: 'Tunnels under the road for stretches, where no tower can touch it. Cover the places it comes up.',
+  },
   colossus: {
     id: 'colossus', name: 'Ashen Colossus', hp: 2400, armor: 8, speed: 0.45, bounty: 150, threat: 40, lives: 10, boss: true,
     blurb: 'A walking furnace. Bring everything you have.',
@@ -46,5 +51,5 @@ export const ENEMIES = {
 };
 
 export const ENEMY_ORDER = [
-  'grunt', 'runner', 'swarm', 'brute', 'wisp', 'mender', 'warden', 'splitter', 'colossus', 'stormwing',
+  'grunt', 'runner', 'swarm', 'brute', 'wisp', 'mender', 'warden', 'splitter', 'burrower', 'colossus', 'stormwing',
 ];

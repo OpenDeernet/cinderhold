@@ -310,3 +310,44 @@ describe('war banner', () => {
     expect(ratio).toBeLessThan(1.3);
   });
 });
+
+describe('cinder mole', () => {
+  it('alternates between surface and tunnel, and is untouchable underground', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    const bolt = g.build('bolt', 4, 0);
+    const mole = g.spawnEnemy('burrower', 0, 1, 0, 0, 4);
+    mole.speed = 0;
+    g.status = 'playing';
+    expect(mole.hidden).toBe(false);
+    expect(g.findTarget(bolt)).toBe(mole);
+    bolt.cooldown = 1e9; // keep the bolt quiet; this test is about targeting
+    run(g, 3.6);
+    expect(mole.hidden).toBe(true);
+    expect(g.findTarget(bolt)).toBeNull();
+    run(g, 1.5);
+    expect(mole.hidden).toBe(false);
+  });
+
+  it('tunnels faster than it walks', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    const mole = g.spawnEnemy('burrower', 0, 1, 0);
+    g.status = 'playing';
+    run(g, 3.4);
+    const surfaceRate = mole.d / 3.4;
+    run(g, 0.2);
+    const d0 = mole.d;
+    run(g, 1.2);
+    expect(mole.hidden).toBe(true);
+    expect((mole.d - d0) / 1.2).toBeGreaterThan(surfaceRate * 1.2);
+  });
+
+  it('dodges splash and pulses while hidden', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    const mole = g.spawnEnemy('burrower', 0, 1, 0, 0, 4);
+    mole.hidden = true;
+    const ember = g.build('ember', 4, 0);
+    expect(g.pulse(ember)).toBe(false);
+    g.impact({ type: 'cannon', tower: 0, x: mole.x, y: mole.y, splash: 2, damage: 50 }, null);
+    expect(mole.hp).toBe(mole.maxHp);
+  });
+});

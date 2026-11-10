@@ -3,6 +3,8 @@ import { PERKS } from './sim/data/perks.js';
 
 const KEY = 'cinderhold.save.v1';
 const MAX_CUSTOM_MAPS = 40;
+const MAX_REPLAYS = 12;
+const MAX_REPLAY_BYTES = 120000;
 
 export const DEFAULT_SETTINGS = {
   master: 0.8,
@@ -26,7 +28,8 @@ function fresh() {
     playSeconds: 0,
     feats: [],
     daily: {}, // date -> { won, lives, maxLives, wavesCleared, attempts }
-    customMaps: [], // { id, name, theme, tier, waves, rows, updated, wins }
+    customMaps: [],
+    replays: [], // { id, name, kind, difficulty, date, result, replay } // { id, name, theme, tier, waves, rows, updated, wins }
     totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {} },
   };
 }
@@ -189,6 +192,31 @@ export class Save {
     return better;
   }
 
+  // ---------------------------------------------------------------- replays
+
+  listReplays() {
+    return [...this.data.replays].sort((a, b) => b.date - a.date);
+  }
+
+  getReplay(id) {
+    return this.data.replays.find((r) => r.id === id) || null;
+  }
+
+  // Keeps the newest few replays; very long ones (marathon endless runs) are
+  // not stored so they cannot crowd out the rest of the save.
+  addReplay(meta, replay) {
+    if (JSON.stringify(replay).length > MAX_REPLAY_BYTES) return null;
+    const id = `r${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+    this.data.replays = [{ ...meta, id, date: Date.now(), replay }, ...this.listReplays()].slice(0, MAX_REPLAYS);
+    this.persist();
+    return id;
+  }
+
+  deleteReplay(id) {
+    this.data.replays = this.data.replays.filter((r) => r.id !== id);
+    this.persist();
+  }
+
   // ---------------------------------------------------------------- custom maps
 
   listMaps() {
@@ -240,7 +268,7 @@ export class Save {
     if (parsed.perks !== undefined && (!Array.isArray(parsed.perks) || !parsed.perks.every((id) => typeof id === 'string'))) return false;
     // These collections are used directly by progress and custom-map methods.
     // Omitted fields retain the defaults for older saves.
-    for (const key of ['seen', 'feats', 'customMaps']) {
+    for (const key of ['seen', 'feats', 'customMaps', 'replays']) {
       if (parsed[key] !== undefined && !Array.isArray(parsed[key])) return false;
     }
     for (const key of ['daily', 'settings', 'totals']) {

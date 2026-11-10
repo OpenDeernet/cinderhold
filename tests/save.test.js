@@ -171,6 +171,24 @@ describe('Save', () => {
     expect(s.listMaps()).toHaveLength(40);
   });
 
+  it('keeps the twelve newest replays and skips huge ones', () => {
+    const s = new Save();
+    const replay = { v: 1, log: [[0, 'wave']] };
+    let first;
+    for (let i = 0; i < 14; i++) {
+      const id = s.addReplay({ name: `R${i}`, kind: 'campaign' }, replay);
+      if (i === 0) first = id;
+    }
+    expect(s.listReplays()).toHaveLength(12);
+    expect(s.getReplay(first)).toBeNull();
+    expect(s.listReplays()[0].name).toBe('R13');
+    const huge = { v: 1, log: Array.from({ length: 20000 }, (_, i) => [i, 'wave']) };
+    expect(s.addReplay({ name: 'huge' }, huge)).toBeNull();
+    const id = s.listReplays()[0].id;
+    s.deleteReplay(id);
+    expect(s.getReplay(id)).toBeNull();
+  });
+
   it('remembers the best endless wave', () => {
     const s = new Save();
     expect(s.recordEndless(LEVELS[0].id, 12)).toBe(true);

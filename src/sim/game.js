@@ -170,6 +170,7 @@ export class Game {
     };
     this.towers.push(t);
     this.occupied.set(r * this.map.w + c, t.id);
+    this.refreshAuras();
     this.stats.built++;
     this.record('build', type, c, r);
     this.emit({ type: 'build', tower: t });
@@ -187,6 +188,7 @@ export class Game {
     t.invested += cost;
     t.touchedAt = this.time;
     t.s = this.towerStats(t.type, t.tier);
+    this.refreshAuras();
     this.record('upgrade', id);
     this.emit({ type: 'upgrade', tower: t });
     return true;
@@ -204,6 +206,7 @@ export class Game {
     this.gold += value;
     this.towers.splice(i, 1);
     this.occupied.delete(t.r * this.map.w + t.c);
+    this.refreshAuras();
     this.record('sell', id);
     this.emit({ type: 'sell', tower: t, value });
     return true;
@@ -449,13 +452,38 @@ export class Game {
     return best;
   }
 
+  // War Banners: each tower takes the strongest banner covering it. Only
+  // recomputed when towers are built, upgraded or sold.
+  refreshAuras() {
+    const banners = this.towers.filter((t) => TOWERS[t.type].kind === 'aura');
+    for (const t of this.towers) {
+      let boost = 0;
+      if (TOWERS[t.type].kind !== 'aura') {
+        for (const b of banners) {
+          if ((b.x - t.x) ** 2 + (b.y - t.y) ** 2 <= b.s.range * b.s.range) boost = Math.max(boost, b.s.boost);
+        }
+      }
+      t.boost = boost;
+    }
+  }
+
+  // Damage and fire rate including any banner boost. Rate gets half the
+  // boost so a banner is worth about a quarter more output, not a third.
+  dmgOf(t) {
+    return t.s.damage * (1 + (t.boost || 0));
+  }
+
+  rateOf(t) {
+    return t.s.rate * (1 + (t.boost || 0) / 2);
+  }
+
   updateTowers(dt) {
     for (const t of this.towers) {
+      if (TOWERS[t.type].kind === 'aura') continue;
       t.cooldown -= dt;
       if (t.cooldown > 0) continue;
-      const s = t.s;
       if (TOWERS[t.type].kind === 'pulse') {
-        if (this.pulse(t)) t.cooldown += 1 / s.rate;
+        if (this.pulse(t)) t.cooldown += 1 / this.rateOf(t);
         else t.cooldown = 0;
         continue;
       }
@@ -467,7 +495,7 @@ export class Game {
       }
       t.target = target.id;
       t.aim = Math.atan2(target.y - t.y, target.x - t.x);
-      t.cooldown += 1 / s.rate;
+      t.cooldown += 1 / this.rateOf(t);
       this.fire(t, target);
     }
   }
@@ -498,7 +526,7 @@ export class Game {
         py: t.y,
         t: 0,
         flight: s.flight,
-        damage: s.damage,
+        damage: this.dmgOf(t),
         splash: s.splash,
         arc: true,
       });
@@ -519,7 +547,7 @@ export class Game {
       target: target.id,
       targetAir: target.air,
       speed: s.projSpeed,
-      damage: s.damage,
+      damage: this.dmgOf(t),
       splash: s.splash || 0,
       slow: s.slow || 0,
       slowTime: s.slowTime || 0,
@@ -533,7 +561,7 @@ export class Game {
     const hit = new Set();
     const points = [{ x: t.x, y: t.y, air: false }];
     let cur = first;
-    let dmg = s.damage;
+    let dmg = this.dmgOf(t);
     const r2 = s.chainRange * s.chainRange;
     for (let i = 0; i < s.chains && cur; i++) {
       hit.add(cur.id);
@@ -563,9 +591,10 @@ export class Game {
       if (e.dead || e.air || e.d < 0) continue;
       if ((e.x - t.x) ** 2 + (e.y - t.y) ** 2 > r2) continue;
       any = true;
-      this.damage(e, s.damage, 'energy', t);
-      if (s.burn >= e.burnDps) {
-        e.burnDps = s.burn;
+      this.damage(e, this.dmgOf(t), 'energy', t);
+      const burn = s.burn * (1 + (t.boost || 0));
+      if (burn >= e.burnDps) {
+        e.burnDps = burn;
         e.burnTime = s.burnTime;
       } else {
         e.burnTime = Math.max(e.burnTime, s.burnTime * 0.5);

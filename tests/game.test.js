@@ -259,3 +259,54 @@ describe('waves', () => {
     expect(last).toContain('stormwing');
   });
 });
+
+const BANNER_LEVEL = { ...TEST_LEVEL, towers: [...TEST_LEVEL.towers, 'banner'] };
+
+describe('war banner', () => {
+  it('boosts towers in range, does not stack, and stops when sold', () => {
+    const g = new Game({ level: BANNER_LEVEL });
+    const bolt = g.build('bolt', 4, 0);
+    const far = g.build('bolt', 9, 2);
+    expect(bolt.boost).toBe(0);
+    const b1 = g.build('banner', 5, 0);
+    expect(bolt.boost).toBeCloseTo(0.15);
+    expect(far.boost).toBe(0);
+    expect(g.dmgOf(bolt)).toBeCloseTo(11 * 1.15);
+    expect(g.rateOf(bolt)).toBeCloseTo(2.2 * 1.075);
+    g.build('banner', 3, 0);
+    expect(bolt.boost).toBeCloseTo(0.15);
+    g.upgrade(b1.id);
+    expect(bolt.boost).toBeCloseTo(0.22);
+    g.sell(b1.id);
+    expect(bolt.boost).toBeCloseTo(0.15);
+  });
+
+  it('never attacks', () => {
+    const g = new Game({ level: BANNER_LEVEL });
+    g.build('banner', 4, 0);
+    g.spawnEnemy('grunt', 0, 1, 0, 0, 4);
+    g.status = 'playing';
+    run(g, 2);
+    expect(g.projectiles).toHaveLength(0);
+    expect(g.towers[0].damage).toBe(0);
+  });
+
+  it('raises damage output by about a quarter', () => {
+    const output = (withBanner) => {
+      const g = new Game({ level: BANNER_LEVEL });
+      const a = g.build('bolt', 3, 0);
+      const b = g.build('bolt', 5, 0);
+      if (withBanner) g.build('banner', 4, 0);
+      // A stationary, unkillable target.
+      const e = g.spawnEnemy('grunt', 0, 1, 0, 0, 4);
+      e.speed = 0;
+      e.hp = e.maxHp = 1e9;
+      g.status = 'playing';
+      run(g, 10);
+      return a.damage + b.damage;
+    };
+    const ratio = output(true) / output(false);
+    expect(ratio).toBeGreaterThan(1.18);
+    expect(ratio).toBeLessThan(1.3);
+  });
+});

@@ -40,13 +40,18 @@ export class Bot {
 
   makeRotation() {
     const base = this.needsAir
-      ? ['bolt', 'cannon', 'bolt', 'frost', 'tesla', 'ember', 'mortar', 'bolt', 'tesla', 'cannon']
-      : ['bolt', 'cannon', 'frost', 'cannon', 'tesla', 'ember', 'mortar', 'bolt', 'tesla', 'cannon'];
+      ? ['bolt', 'cannon', 'bolt', 'frost', 'tesla', 'ember', 'mortar', 'banner', 'bolt', 'tesla', 'cannon']
+      : ['bolt', 'cannon', 'frost', 'cannon', 'tesla', 'ember', 'mortar', 'banner', 'bolt', 'tesla', 'cannon'];
     return base.filter((t) => this.game.towerAllowed(t));
   }
 
   coverage(c, r, type) {
     const s = TOWERS[type].tiers[0];
+    // A banner is worth the towers it would cover, not the road.
+    if (TOWERS[type].kind === 'aura') {
+      const r2 = s.range * s.range;
+      return this.game.towers.filter((t) => TOWERS[t.type].kind !== 'aura' && (t.x - c - 0.5) ** 2 + (t.y - r - 0.5) ** 2 <= r2).length * 40;
+    }
     const range = s.range;
     const min = s.minRange || 0;
     const x = c + 0.5;

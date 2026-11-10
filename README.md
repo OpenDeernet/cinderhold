@@ -74,6 +74,7 @@ browser's localStorage.
 | Middle drag, WASD, arrow keys | Pan |
 | C / Home | Reset the camera |
 | R | Show every tower's range |
+| H | Placement heatmap while building |
 | Space | Send the next wave (early calls pay a bonus) |
 | U / X / T | Upgrade / sell / cycle targeting of the selected tower |
 | F | Cycle game speed |

@@ -4,7 +4,7 @@
 const THROTTLE = {
   bolt: 0.045, cannon: 0.06, frost: 0.06, tesla: 0.06, mortar: 0.08, ember: 0.12,
   hit: 0.05, boom: 0.06, bigboom: 0.1, frostHit: 0.07, death: 0.035, coin: 0.05,
-  shield: 0.08, heal: 0.2, spawn: 0.12,
+  shield: 0.08, heal: 0.2, spawn: 0.12, dig: 0.15,
 };
 
 const MAX_VOICES = 28;
@@ -238,6 +238,9 @@ export class Audio {
       case 'heal':
         this.tone({ freq: 520, to: 880, dur: 0.25, type: 'sine', vol: 0.05, attack: 0.05 });
         break;
+      case 'dig':
+        this.hiss({ dur: 0.25, freq: 250, to: 120, type: 'lowpass', vol: 0.12 });
+        break;
       case 'tick':
         this.tone({ freq: 1200, dur: 0.05, type: 'triangle', vol: 0.06 });
         break;
@@ -297,6 +300,10 @@ export class Audio {
         break;
       case 'heal':
         this.play('heal');
+        break;
+      case 'burrow':
+      case 'surface':
+        this.play('dig');
         break;
     }
   }

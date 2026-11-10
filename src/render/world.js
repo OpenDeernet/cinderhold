@@ -692,7 +692,9 @@ export class World {
       const y = e.py + (e.y - e.py) * alpha;
       const w = this.toWorld(x, y);
       const root = rec.model.root;
-      root.position.set(w.x, e.air ? AIR_HEIGHT : 0, w.z);
+      // Tunnelling enemies sink below the road; ease in and out of it.
+      rec.sink = (rec.sink || 0) + ((e.hidden ? 1 : 0) - (rec.sink || 0)) * 0.2;
+      root.position.set(w.x, e.air ? AIR_HEIGHT : -0.55 * rec.sink, w.z);
       root.rotation.y = lerpAngle(root.rotation.y, -e.dir, 0.25);
     }
     for (const id of [...this.enemies.keys()]) if (!seen.has(id)) this.removeEnemy(id);
@@ -823,6 +825,12 @@ export class World {
         const { x, z } = this.toWorld(ev.enemy.x, ev.enemy.y);
         this.rings.spawn(x, 0.08, z, { color: 0x6dff8a, from: 0.2, to: 1.6, life: 0.6, opacity: 0.5 });
         this.fx.burst(x, 0.5, z, 6, { color: 0x8dff9a, speed: 0.6, up: 1.5, life: 0.6, size: 0.12, spread: 0.6 });
+        break;
+      }
+      case 'burrow':
+      case 'surface': {
+        const { x, z } = this.toWorld(ev.enemy.x, ev.enemy.y);
+        this.smoke.burst(x, 0.05, z, 12, { color: [this.theme.road, this.theme.roadEdge], speed: 1.4, up: 1.4, life: 0.6, size: 0.14, gravity: 4, alpha: 0.9 });
         break;
       }
       case 'shieldBreak': {
@@ -1071,8 +1079,13 @@ export class World {
     }
 
     // Health bar: only once damaged, always facing the camera.
-    const damaged = e.hp < e.maxHp || (e.maxShield && e.shield < e.maxShield) || e.boss;
+    const damaged = (e.hp < e.maxHp || (e.maxShield && e.shield < e.maxShield) || e.boss) && !e.hidden;
     bar.group.visible = !!damaged;
+    if (p.drill) p.drill.rotation.x += dt * 14;
+    if (e.hidden && Math.random() < dt * 10) {
+      const r = model.root.position;
+      this.smoke.emit({ x: r.x + (Math.random() - 0.5) * 0.3, y: 0.02, z: r.z + (Math.random() - 0.5) * 0.3, vy: 0.4, color: this.theme.road, alpha: 0.8, life: 0.6, size: 0.14, endSize: 0.05 });
+    }
     if (damaged) {
       const r = model.root.position;
       bar.group.position.set(r.x, r.y + model.height * model.root.scale.y + 0.15, r.z);

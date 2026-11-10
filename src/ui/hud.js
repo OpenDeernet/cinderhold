@@ -4,6 +4,7 @@ import { waveSummary, waveTraits } from '../sim/waves.js';
 import { clear, fill, h, icon } from './dom.js';
 import { statLines } from './stats.js';
 import { modifierById } from '../sim/data/modifiers.js';
+import { ABILITIES, ABILITY_ORDER } from '../sim/data/abilities.js';
 
 const MODE_LABEL = { first: 'First', last: 'Last', strong: 'Strongest', close: 'Closest' };
 
@@ -65,6 +66,21 @@ export class Hud {
       this.buildBtns[type] = { b, cost };
       this.bar.appendChild(b);
     }
+    // Commander abilities, bottom left.
+    this.abilityBtns = {};
+    this.abilityBar = h('div.ability-bar');
+    for (const id of ABILITY_ORDER) {
+      const a = ABILITIES[id];
+      const cd = h('span.cd');
+      const b = h('button.ability-btn', {
+        title: `${a.name} (${a.key}): ${a.blurb}`,
+        'aria-label': `${a.name} (${a.key})`,
+        onclick: () => this.ctx.actions.useAbility(id),
+      }, icon(`ability-${id}`, 'icon'), h('span.hotkey', a.key), cd);
+      this.abilityBtns[id] = { b, cd };
+      this.abilityBar.appendChild(b);
+    }
+
     this.tip = h('div.tip');
     this.tip.hidden = true;
 
@@ -87,7 +103,7 @@ export class Hud {
     this.hint.hidden = true;
     this.vignette = h('div.vignette');
 
-    this.el.append(this.vignette, this.top, this.modsEl, this.planning, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
+    this.el.append(this.vignette, this.top, this.modsEl, this.planning, this.bossBar, this.waveBox, this.bar, this.abilityBar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
   attach(game, { tutorial, replay = false }) {
@@ -169,7 +185,28 @@ export class Hud {
     set('preview', g.waveIndex, () => this.renderPreview(g));
 
     this.updateBoss(g);
+    this.updateAbilities(g, session);
     if (this.selected) this.updatePanel();
+  }
+
+  // Cooldown sweep and state for each ability button.
+  updateAbilities(g, session) {
+    let any = false;
+    for (const id of ABILITY_ORDER) {
+      const { b, cd } = this.abilityBtns[id];
+      const allowed = g.abilityAllowed(id);
+      b.hidden = !allowed;
+      if (!allowed) continue;
+      any = true;
+      const left = g.abilityReadyIn(id);
+      const frac = left / ABILITIES[id].cooldown;
+      b.style.setProperty('--cd', `${(frac * 360).toFixed(1)}deg`);
+      const text = left > 0 ? String(Math.ceil(left)) : '';
+      if (cd.textContent !== text) cd.textContent = text;
+      b.classList.toggle('ready', g.canCast(id));
+      b.classList.toggle('aiming', session.aim === id);
+    }
+    this.abilityBar.hidden = !any;
   }
 
   // The toughest boss on the field gets a bar under the top HUD.

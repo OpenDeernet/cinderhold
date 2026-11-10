@@ -15,6 +15,7 @@ import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
 import { GamepadInput } from './input/gamepad.js';
+import { ABILITIES } from './sim/data/abilities.js';
 
 const save = new Save();
 const audio = new Audio(save);
@@ -124,6 +125,25 @@ const actions = {
     }
     setBuild(type);
   },
+  // Instant abilities fire at once; targeted ones enter aim mode and fire on
+  // the next click.
+  useAbility: (id) => {
+    if (!commandable() || session.paused) return;
+    const g = session.game;
+    if (!g.canCast(id)) {
+      audio.play('error');
+      if (g.abilityAllowed(id) && g.status !== 'playing') hud.toast('Abilities work once the first wave is out');
+      return;
+    }
+    if (ABILITIES[id].targeted) {
+      setBuild(null);
+      select(null);
+      session.aim = session.aim === id ? null : id;
+      updateCursor();
+      return;
+    }
+    g.cast(id);
+  },
   deselect: () => select(null),
   upgrade: () => {
     const t = session?.selected;
@@ -220,6 +240,7 @@ function setBuild(type) {
   if (!session || session.demo) return;
   if (type && !session.game.towerAllowed(type)) return;
   session.buildType = type;
+  if (type) session.aim = null;
   refreshHeatmap();
   hud.setBuild(type);
   if (type) select(null);
@@ -355,10 +376,17 @@ let padTile = null;
 function updateCursor() {
   if (!session || session.demo) return;
   if (padTile && !lastPointer) {
+    if (session.aim) world.setAim({ x: padTile.c + 0.5, y: padTile.r + 0.5 }, ABILITIES[session.aim].radius);
+    else world.setAim(null);
     showCursor(padTile, true);
     return;
   }
   if (!lastPointer) return;
+  if (session.aim) {
+    world.setAim(world.pickPoint(lastPointer.x, lastPointer.y), ABILITIES[session.aim].radius);
+    return;
+  }
+  world.setAim(null);
   showCursor(world.pickTile(lastPointer.x, lastPointer.y), false);
 }
 
@@ -415,12 +443,14 @@ canvas.addEventListener('pointerup', (e) => {
   }
   lastPointer = { x: e.clientX, y: e.clientY };
   if (btn === 2) {
+    session.aim = null;
+    world.setAim(null);
     setBuild(null);
     select(null);
     return;
   }
   if (btn !== 0) return;
-  click(world.pickTile(e.clientX, e.clientY), e.shiftKey);
+  click(world.pickTile(e.clientX, e.clientY), e.shiftKey, world.pickPoint(e.clientX, e.clientY));
 });
 
 canvas.addEventListener('pointerleave', () => {
@@ -432,9 +462,16 @@ canvas.addEventListener('pointerleave', () => {
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-function click(tile, keepBuilding) {
+function click(tile, keepBuilding, point = null) {
   const g = session.game;
   if (g.isOver()) return;
+  if (session.aim) {
+    const p = point || (tile && { x: tile.c + 0.5, y: tile.r + 0.5 });
+    if (p && g.cast(session.aim, p.x, p.y)) session.aim = null;
+    else audio.play('error');
+    updateCursor();
+    return;
+  }
   if (!tile) {
     select(null);
     return;
@@ -496,7 +533,9 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' || e.code === 'KeyP') {
     if (screens.current && screens.current !== 'pause') return;
     if (session.paused) setPaused(false);
-    else if (e.code === 'Escape' && (session.buildType || session.selected)) {
+    else if (e.code === 'Escape' && (session.buildType || session.selected || session.aim)) {
+      session.aim = null;
+      world.setAim(null);
       setBuild(null);
       select(null);
     } else setPaused(true);
@@ -531,6 +570,15 @@ window.addEventListener('keydown', (e) => {
       break;
     case 'KeyF':
       actions.setSpeed((session.speed % 3) + 1);
+      break;
+    case 'KeyQ':
+      actions.useAbility('meteor');
+      break;
+    case 'KeyE':
+      actions.useAbility('nova');
+      break;
+    case 'KeyZ':
+      actions.useAbility('chest');
       break;
     case 'KeyH':
       save.settings.heatmap = !save.settings.heatmap;

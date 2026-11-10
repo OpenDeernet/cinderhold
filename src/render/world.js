@@ -92,6 +92,7 @@ export class World {
     this.routeSparks = [];
     this.dying = [];
     this.fireworks = 0;
+    this.meteors = [];
 
     this.makeCursorObjects();
     this.setQuality(this.quality);
@@ -224,6 +225,8 @@ export class World {
     this.routeTimer = 0;
     this.routeSparks = [];
     this.fireworks = 0;
+    this.meteors = [];
+    this.setAim(null);
   }
 
   unload() {
@@ -462,6 +465,38 @@ export class World {
     const r = Math.floor(hit.z + this.map.h / 2);
     if (c < 0 || r < 0 || c >= this.map.w || r >= this.map.h) return null;
     return { c, r };
+  }
+
+  // Exact ground point under the pointer, in sim coordinates.
+  pickPoint(clientX, clientY) {
+    if (!this.map) return null;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = (this.ndc || (this.ndc = new THREE.Vector2())).set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.ray.intersectPlane(this.groundPlane, this.tmp);
+    if (!hit) return null;
+    const x = hit.x + this.map.w / 2;
+    const y = hit.z + this.map.h / 2;
+    if (x < 0 || y < 0 || x > this.map.w || y > this.map.h) return null;
+    return { x, y };
+  }
+
+  // Target circle for an aimed ability.
+  setAim(point, radius) {
+    if (!this.aimRing) {
+      this.aimRing = makeRangeRing();
+      this.aimRing.ring.material.color.set(0xff6a2a);
+      this.aimRing.fill.material.color.set(0xff6a2a);
+      this.aimRing.fill.material.opacity = 0.18;
+      this.scene.add(this.aimRing.root);
+    }
+    if (!point) {
+      this.aimRing.root.visible = false;
+      return;
+    }
+    const { x, z } = this.toWorld(point.x, point.y);
+    this.showRing(this.aimRing, x, z, radius);
+    this.hover.visible = false;
   }
 
   setHover(tile, color = 0xffffff) {
@@ -911,6 +946,23 @@ export class World {
       case 'won':
         this.fireworks = 2.5;
         break;
+      case 'cast':
+        this.castEffect(ev);
+        break;
+      case 'meteor': {
+        const { x, z } = this.toWorld(ev.x, ev.y);
+        this.fx.burst(x, 0.3, z, 60, { color: [0xffb04a, 0xff5a1a, 0xffe08a, 0xff3a00], speed: 4.5, up: 1.2, life: 0.8, size: 0.35, drag: 2, gravity: 3, spread: 0.6 });
+        this.smoke.burst(x, 0.3, z, 26, { color: 0x4a4038, speed: 2, up: 1.2, life: 1.6, size: 0.6, endSize: 1.3, alpha: 0.6, drag: 1.5, spread: 0.6 });
+        this.rings.spawn(x, 0.06, z, { color: 0xff8a3a, from: 0.3, to: ev.radius * 1.15, life: 0.6, opacity: 0.9 });
+        this.shake = Math.max(this.shake, 0.35);
+        break;
+      }
+      case 'chest': {
+        const h = this.hold.root.position;
+        this.fx.burst(h.x, 1.4, h.z, 40, { color: [0xffd34a, 0xffe9a0, 0xf2c14e], speed: 2.4, up: 2.2, life: 1.1, size: 0.16, gravity: 5 });
+        this.floats.spawn(h.x, 2, h.z, `+${ev.gold}`, 'gold');
+        break;
+      }
       case 'wave': {
         for (const p of this.portals) {
           const { x, z } = p.root.position;
@@ -918,6 +970,40 @@ export class World {
         }
         if (ev.boss) this.shake = Math.max(this.shake, 0.25);
         break;
+      }
+    }
+  }
+
+  castEffect(ev) {
+    if (ev.ability === 'meteor') {
+      // A rock falls from high above onto the marked spot.
+      const { x, z } = this.toWorld(ev.x, ev.y);
+      const rock = new THREE.Mesh(G.dodec(), mat(0x4b3a33, { emissive: 0xff4a10, emissiveIntensity: 0.9 }));
+      rock.scale.setScalar(0.35);
+      this.root.add(rock);
+      this.meteors.push({ mesh: rock, x, z, t: 0, dur: 0.9 });
+      this.rings.spawn(x, 0.05, z, { color: 0xff6a2a, from: 1.6, to: 0.2, life: 0.9, opacity: 0.6 });
+    } else if (ev.ability === 'nova') {
+      const span = Math.max(this.map.w, this.map.h);
+      this.rings.spawn(0, 0.1, 0, { color: 0x9fe3ff, from: 0.5, to: span * 0.8, life: 1.0, opacity: 0.8 });
+      for (const rec of this.enemies.values()) {
+        const p = rec.model.root.position;
+        this.fx.burst(p.x, p.y + 0.4, p.z, 6, { color: [0xe8f8ff, 0x7fd3ff], speed: 1.2, up: 0.8, life: 0.7, size: 0.12, gravity: 1 });
+      }
+    }
+  }
+
+  updateMeteors(dt) {
+    for (let i = this.meteors.length - 1; i >= 0; i--) {
+      const m = this.meteors[i];
+      m.t += dt;
+      const k = Math.min(1, m.t / m.dur);
+      m.mesh.position.set(m.x - 4 * (1 - k), 0.2 + 12 * (1 - k) * (1 - k), m.z - 2 * (1 - k));
+      m.mesh.rotation.x += dt * 6;
+      this.fx.emit({ x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z, color: k > 0.5 ? 0xffb04a : 0xff6a1a, life: 0.4, size: 0.35, endSize: 0.05 });
+      if (k >= 1) {
+        this.root.remove(m.mesh);
+        this.meteors.splice(i, 1);
       }
     }
   }
@@ -1023,6 +1109,7 @@ export class World {
       }
       this.updateRanges(game);
       this.updateFireworks(dt);
+      this.updateMeteors(dt);
       this.ambient(dt);
       this.routePreview(dt, game);
       this.shakeBoard(dt);

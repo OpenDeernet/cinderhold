@@ -266,7 +266,7 @@ function recordResult(abandoned = false) {
     return actions.onCustomResult?.(session, abandoned) ?? null;
   }
   if (g.endless) {
-    const newBest = save.recordEndless(g.level.id, g.stats.wavesCleared);
+    const newBest = save.recordEndless(g.level.id, g.stats.wavesCleared, { kills: g.stats.kills, difficulty: g.difficulty });
     save.persist();
     return { newBest };
   }

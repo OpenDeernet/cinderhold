@@ -189,6 +189,16 @@ describe('Save', () => {
     expect(s.getReplay(id)).toBeNull();
   });
 
+  it('keeps the five best endless runs per map', () => {
+    const s = new Save();
+    for (const [wave, kills] of [[10, 100], [30, 900], [20, 400], [30, 950], [5, 10], [25, 600], [12, 120]]) {
+      s.recordEndless(LEVELS[0].id, wave, { kills });
+    }
+    expect(s.endlessRuns(LEVELS[0].id).map((r) => [r.wave, r.kills])).toEqual([[30, 950], [30, 900], [25, 600], [20, 400], [12, 120]]);
+    expect(s.level(LEVELS[0].id).bestEndless).toBe(30);
+    expect(s.endlessRuns(LEVELS[1].id)).toEqual([]);
+  });
+
   it('remembers the best endless wave', () => {
     const s = new Save();
     expect(s.recordEndless(LEVELS[0].id, 12)).toBe(true);

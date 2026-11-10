@@ -284,6 +284,27 @@ describe('waves', () => {
 
 const BANNER_LEVEL = { ...TEST_LEVEL, towers: [...TEST_LEVEL.towers, 'banner'] };
 
+describe('veterancy', () => {
+  it('ranks towers up at 25, 75 and 200 kills for more damage', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    const t = g.build('bolt', 4, 0);
+    const base = g.dmgOf(t);
+    const kill = () => {
+      const e = g.spawnEnemy('grunt', 0, 1, 0, 0, 4);
+      g.damage(e, 1e6, 'energy', t);
+    };
+    for (let i = 0; i < 24; i++) kill();
+    expect(t.rank).toBe(0);
+    kill();
+    expect(t.rank).toBe(1);
+    expect(g.dmgOf(t)).toBeCloseTo(base * 1.06);
+    expect(g.drainEvents().filter((e) => e.type === 'rankup')).toHaveLength(1);
+    for (let i = 0; i < 175; i++) kill();
+    expect(t.rank).toBe(3);
+    expect(g.dmgOf(t)).toBeCloseTo(base * 1.18);
+  });
+});
+
 describe('war banner', () => {
   it('boosts towers in range, does not stack, and stops when sold', () => {
     const g = new Game({ level: BANNER_LEVEL });

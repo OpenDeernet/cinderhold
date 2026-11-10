@@ -639,12 +639,32 @@ export class World {
 
   addTower(t) {
     const model = makeTower(t.type, t.tier);
+    queueMicrotask(() => {
+      const rec = this.towers.get(t.id);
+      if (rec && t.rank) this.addRankStars(rec, t.rank);
+    });
     const { x, z } = this.toWorld(t.x, t.y);
     model.root.position.set(x, 0, z);
     model.head.rotation.y = -t.aim;
     model.root.scale.setScalar(0.01);
     this.root.add(model.root);
     this.towers.set(t.id, { model, tier: t.tier, grow: 0, recoil: 0 });
+  }
+
+  // Small gold stars circling above a veteran tower, one per rank.
+  addRankStars(rec, rank) {
+    if (rec.stars) rec.model.root.remove(rec.stars);
+    const g = new THREE.Group();
+    for (let i = 0; i < rank; i++) {
+      const star = new THREE.Mesh(G.oct(), mat(0xffd34a, { emissive: 0xffa020, emissiveIntensity: 1.4 }));
+      const a = (i / rank) * Math.PI * 2;
+      star.position.set(Math.cos(a) * 0.28, 0, Math.sin(a) * 0.28);
+      star.scale.setScalar(0.05);
+      g.add(star);
+    }
+    g.position.y = 1.15;
+    rec.model.root.add(g);
+    rec.stars = g;
   }
 
   removeTower(id) {
@@ -929,6 +949,14 @@ export class World {
         this.smoke.burst(x, 0.05, z, 12, { color: [this.theme.road, this.theme.roadEdge], speed: 1.4, up: 1.4, life: 0.6, size: 0.14, gravity: 4, alpha: 0.9 });
         break;
       }
+      case 'rankup': {
+        const rec = this.towers.get(ev.tower.id);
+        if (rec) this.addRankStars(rec, ev.rank);
+        const { x, z } = this.toWorld(ev.tower.x, ev.tower.y);
+        this.floats.spawn(x, 1.3, z, `${'★'.repeat(ev.rank)} Veteran`, 'gold');
+        this.fx.burst(x, 1, z, 18, { color: [0xffd34a, 0xffffff], speed: 1.2, up: 1.6, life: 0.8, size: 0.12, gravity: 2 });
+        break;
+      }
       case 'shieldBreak': {
         const rec = this.enemies.get(ev.enemy.id);
         const { x, z } = this.toWorld(ev.enemy.x, ev.enemy.y);
@@ -1152,6 +1180,7 @@ export class World {
         this.rings.spawn(p.x, 0.05, p.z, { color: 0xffc35a, from: 0.3, to: tower.s.range, life: 1.2, opacity: 0.35 });
       }
     }
+    if (rec.stars) rec.stars.rotation.y += dt * 1.2;
     if (a.spin) a.spin.rotation.y += dt * 1.5;
     if (a.bob) a.bob.position.y = 0.55 + Math.sin(t * 2 + tower.id) * 0.04;
     if (a.pulse) {

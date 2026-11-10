@@ -317,7 +317,7 @@ export class Hud {
       return;
     }
     const up = g.upgradeCost(t);
-    const key = `${t.id}|${t.tier}|${t.mode}|${t.boost}|${g.towers.length}|${g.canSell()}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
+    const key = `${t.id}|${t.tier}|${t.rank}|${t.mode}|${t.boost}|${g.towers.length}|${g.canSell()}|${g.gold >= (up ?? Infinity)}|${t.kills}|${Math.round(t.damage / 50)}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
     const a = this.ctx.actions;
@@ -335,7 +335,8 @@ export class Hud {
     fill(this.panel,
       h('div.panel-top',
         icon(t.type, 'icon'),
-        h('div', h('div.tp-name', def.name), h('div.pips', [0, 1, 2].map((i) => h(`span.pip${i <= t.tier ? '.on' : ''}`)))),
+        h('div', h('div.tp-name', def.name, t.rank ? h('span.rank', { title: `Veteran rank ${t.rank}: +${t.rank * 6}% damage` }, ' ', '★'.repeat(t.rank)) : null),
+          h('div.pips', [0, 1, 2].map((i) => h(`span.pip${i <= t.tier ? '.on' : ''}`)))),
         h('button.close', { title: 'Close (Esc)', 'aria-label': 'Close', onclick: () => a.deselect() }, '×'),
       ),
       h('table.tp-stats', rows),

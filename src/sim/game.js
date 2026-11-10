@@ -11,6 +11,8 @@ const SHIELD_REGEN_DELAY = 2.5;
 const MAX_TICKS_PER_UPDATE = 12;
 const FREE_SELL_WINDOW = 5;
 const TIMELINE_STEP = 3;
+export const RANK_KILLS = [25, 75, 200];
+const RANK_BONUS = 0.06;
 const TIMELINE_MAX = 600;
 
 // Alive, on the field and not tunnelling.
@@ -175,6 +177,7 @@ export class Game {
       invested: cost,
       touchedAt: this.time,
       kills: 0,
+      rank: 0,
       damage: 0,
       s: this.towerStats(type, 0),
     };
@@ -553,7 +556,16 @@ export class Game {
   // Damage and fire rate including any banner boost. Rate gets half the
   // boost so a banner is worth about a quarter more output, not a third.
   dmgOf(t) {
-    return t.s.damage * (1 + (t.boost || 0));
+    return t.s.damage * (1 + (t.boost || 0)) * (1 + RANK_BONUS * (t.rank || 0));
+  }
+
+  // Veterancy: towers rank up with kills; each rank adds a little damage.
+  checkRank(t) {
+    const rank = RANK_KILLS.filter((k) => t.kills >= k).length;
+    if (rank > (t.rank || 0)) {
+      t.rank = rank;
+      this.emit({ type: 'rankup', tower: t, rank });
+    }
   }
 
   rateOf(t) {
@@ -782,7 +794,10 @@ export class Game {
     if (e.hp <= 0) {
       e.dead = true;
       e.killedBy = tower ? tower.id : 0;
-      if (tower) tower.kills++;
+      if (tower) {
+        tower.kills++;
+        this.checkRank(tower);
+      }
     }
   }
 

@@ -8,6 +8,7 @@ import {
   ENEMY_COLORS, G, TOWER_COLORS, geo, makeEnemy, makeHold, makePortal, makeRangeRing, makeTower, mat,
 } from './models.js';
 import { FloatText, Lightning, Particles, Rings } from './effects.js';
+import { coverageMap } from '../sim/coverage.js';
 
 const AIR_HEIGHT = 1.15;
 const QUALITY = {
@@ -223,6 +224,7 @@ export class World {
     this.setGhost(null);
     this.setSelected(null);
     this.setShowRanges(false);
+    this.setHeatmap(null, null);
     this.hover.visible = false;
   }
 
@@ -498,6 +500,43 @@ export class World {
       ring.fill.material.color.set(color);
     }
     ring.root.visible = true;
+  }
+
+  // Placement heatmap: while choosing where to build, shade every open tile
+  // by how much road the chosen tower would cover from it (H toggles).
+  setHeatmap(game, type) {
+    const key = type && game ? `${type}|${game.towers.length}` : null;
+    if (key === this.heatKey) return;
+    this.heatKey = key;
+    if (this.heat) {
+      this.scene.remove(this.heat);
+      this.heat.dispose();
+      this.heat = null;
+    }
+    if (!key) return;
+    const { scores } = coverageMap(game, type);
+    const { w } = this.map;
+    const tiles = [];
+    for (let i = 0; i < scores.length; i++) if (scores[i] >= 0) tiles.push(i);
+    const mesh = new THREE.InstancedMesh(
+      geo('tileHl', () => new THREE.PlaneGeometry(0.96, 0.96).rotateX(-Math.PI / 2)),
+      this.heatMat || (this.heatMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.55, depthWrite: false })),
+      tiles.length,
+    );
+    const m = new THREE.Matrix4();
+    const cold = new THREE.Color(0x1c2f9a);
+    const hot = new THREE.Color(0xff4a1a);
+    const col = new THREE.Color();
+    tiles.forEach((i, k) => {
+      const { x, z } = this.toWorld((i % w) + 0.5, Math.floor(i / w) + 0.5);
+      m.makeTranslation(x, 0.015, z);
+      mesh.setMatrixAt(k, m);
+      // Square the score so the best tiles stand out.
+      mesh.setColorAt(k, col.copy(cold).lerp(hot, scores[i] * scores[i]));
+    });
+    mesh.renderOrder = 1;
+    this.heat = mesh;
+    this.scene.add(mesh);
   }
 
   // Range rings for every tower at once (R), to spot gaps in coverage.

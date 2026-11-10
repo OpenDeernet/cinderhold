@@ -146,6 +146,7 @@ const actions = {
   applySettings: () => {
     audio.applyVolumes();
     world.reduceMotion = save.settings.reduceMotion;
+    refreshHeatmap();
     if (world.quality !== save.settings.quality) world.setQuality(save.settings.quality);
   },
   tutorialDone: () => {
@@ -213,6 +214,7 @@ function setBuild(type) {
   if (!session || session.demo) return;
   if (type && !session.game.towerAllowed(type)) return;
   session.buildType = type;
+  refreshHeatmap();
   hud.setBuild(type);
   if (type) select(null);
   if (!type) world.setGhost(null);
@@ -224,6 +226,10 @@ function select(tower) {
   session.selected = tower;
   world.setSelected(tower);
   hud.select(tower);
+}
+
+function refreshHeatmap() {
+  world.setHeatmap(session?.game, save.settings.heatmap && session?.buildType ? session.buildType : null);
 }
 
 // Commands come from the player only in a live battle, not in the title
@@ -428,6 +434,7 @@ function click(tile, keepBuilding) {
     }
     if (g.canBuild(type, tile.c, tile.r)) {
       g.build(type, tile.c, tile.r);
+      refreshHeatmap();
       if (!keepBuilding || g.gold < g.buildCost(type)) setBuild(null);
     } else {
       audio.play('error');
@@ -503,6 +510,12 @@ window.addEventListener('keydown', (e) => {
       break;
     case 'KeyF':
       actions.setSpeed((session.speed % 3) + 1);
+      break;
+    case 'KeyH':
+      save.settings.heatmap = !save.settings.heatmap;
+      save.persist();
+      refreshHeatmap();
+      hud.toast(save.settings.heatmap ? 'Placement heatmap on' : 'Placement heatmap off');
       break;
     case 'KeyR':
       world.setShowRanges(!world.showRanges);

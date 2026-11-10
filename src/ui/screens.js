@@ -217,10 +217,24 @@ export class Screens {
       h('div.level-info', h('div.level-name', level.name), h('div.level-meta', best ? `Best: wave ${best}` : 'Not attempted')),
       ));
     });
+    // Top runs across every map.
+    const runs = LEVELS.flatMap((l) => s.endlessRuns(l.id).map((r) => ({ ...r, map: l.name })))
+      .sort((a, b) => b.wave - a.wave || b.kills - a.kills)
+      .slice(0, 5);
+    const board = runs.length
+      ? h('table.stats.records.board',
+        h('tr', h('th', '#'), h('th', 'Map'), h('th', 'Wave'), h('th', 'Kills'), h('th', 'When')),
+        runs.map((r, i) => h('tr',
+          h('td', String(i + 1)), h('td', r.map), h('td', String(r.wave)), h('td', r.kills.toLocaleString()),
+          h('td', new Date(r.date).toLocaleDateString()),
+        )))
+      : null;
     this.mount('endless', h('div.panel.wide',
       h('div.panel-head', h('h2', 'Endless Siege')),
       h('p.muted', 'Every tower, every enemy, no end. Waves grow tougher forever; how long can the Hold stand? Perks apply.'),
       grid,
+      board ? h('h3.help-sub', 'Longest stands') : null,
+      board,
       h('div.row', this.btn('Back', () => this.title())),
     ));
   }

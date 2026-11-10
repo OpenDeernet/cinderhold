@@ -4,6 +4,7 @@ import { PERKS } from './sim/data/perks.js';
 const KEY = 'cinderhold.save.v1';
 const MAX_CUSTOM_MAPS = 40;
 const MAX_REPLAYS = 12;
+const ENDLESS_RUNS = 5;
 const MAX_REPLAY_BYTES = 120000;
 
 export const DEFAULT_SETTINGS = {
@@ -132,12 +133,21 @@ export class Save {
     return { newStars: next.stars - prev.stars, firstWin: prev.stars === 0, heroic: difficulty === 'heroic' && !prev.heroic };
   }
 
-  recordEndless(id, wave) {
+  // Keeps the best five endless runs per map (wave reached, then kills).
+  // Returns true when this run is a new best.
+  recordEndless(id, wave, { kills = 0, difficulty = 'normal' } = {}) {
     const prev = this.level(id);
     const best = Math.max(prev.bestEndless || 0, wave);
-    this.data.levels[id] = { ...prev, bestEndless: best };
+    const runs = [...(prev.endlessRuns || []), { wave, kills, difficulty, date: Date.now() }]
+      .sort((a, b) => b.wave - a.wave || b.kills - a.kills)
+      .slice(0, ENDLESS_RUNS);
+    this.data.levels[id] = { ...prev, bestEndless: best, endlessRuns: runs };
     this.persist();
     return best > (prev.bestEndless || 0);
+  }
+
+  endlessRuns(id) {
+    return this.level(id).endlessRuns || [];
   }
 
   markSeen(type) {

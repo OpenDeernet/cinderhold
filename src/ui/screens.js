@@ -11,6 +11,7 @@ import { battleChart } from './chart.js';
 import { MapEditor, mapThumbnail } from './editor.js';
 import { blankMap, decodeMap, encodeMap, TIERS } from '../sim/mapcodec.js';
 import { dailyTrial, dateKey, streak } from '../sim/daily.js';
+import { randomMap } from '../sim/mapgen.js';
 import { modifierById } from '../sim/data/modifiers.js';
 import { clear, fill, fmtTime, h, icon, toggleFullscreen } from './dom.js';
 
@@ -296,7 +297,10 @@ export class Screens {
       ));
     }
     this.mount('workshop', h('div.panel.wide',
-      h('div.panel-head', h('h2', 'Map Workshop'), this.btn('New map', () => this.editor(blankMap()), 'primary')),
+      h('div.panel-head', h('h2', 'Map Workshop'), h('div.row.tight',
+        this.btn('Random map', () => this.editor(randomMap(Date.now() & 0x7fffffff))),
+        this.btn('New map', () => this.editor(blankMap()), 'primary'),
+      )),
       h('p.muted', 'Design your own battlefields, play them with any difficulty and perks, and share them as short codes. Custom maps never affect campaign stars.'),
       list,
       h('div.import-row', code, this.btn('Import', () => {

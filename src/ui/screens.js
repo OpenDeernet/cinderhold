@@ -263,6 +263,7 @@ export class Screens {
       h('p.muted', 'Every player gets the same trial today. All towers are available; your perks and chosen difficulty apply.'),
       h('div.brief-stats', result),
       h('div.brief-stats', run ? `Current streak: ${run} day${run > 1 ? 's' : ''}` : 'Win today to start a streak.'),
+      this.dailyHistory(today),
       h('div.label', 'Difficulty'),
       this.difficultyPicker(),
       h('div.row',
@@ -270,6 +271,23 @@ export class Screens {
         this.btn(res?.won ? 'Play again' : 'Take the trial', () => this.ctx.actions.playDaily(), 'primary'),
       ),
     ));
+  }
+
+  // The last two weeks of trials: won, tried, or missed.
+  dailyHistory(today) {
+    const days = [];
+    const d = new Date(`${today}T12:00:00`);
+    for (let i = 13; i >= 0; i--) {
+      const day = new Date(d);
+      day.setDate(d.getDate() - i);
+      const k = dateKey(day);
+      const r = this.save.dailyResult(k);
+      const state = r?.won ? 'won' : r ? 'tried' : 'missed';
+      const label = day.toLocaleDateString(undefined, { weekday: 'narrow' });
+      const title = `${k}: ${r?.won ? `won, ${r.lives}/${r.maxLives} lives` : r ? `reached wave ${r.wavesCleared}` : 'not played'}`;
+      days.push(h(`div.day.${state}${k === today ? '.today' : ''}`, { title }, label));
+    }
+    return h('div.day-strip', days);
   }
 
   // ---------------------------------------------------------------- map workshop

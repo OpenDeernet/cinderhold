@@ -58,6 +58,7 @@ export const TOWER_COLORS = {
   tesla: 0x9a7bff,
   mortar: 0x8a8f66,
   ember: 0xff7a2a,
+  banner: 0xd94a2b,
 };
 
 // ------------------------------------------------------------------ towers
@@ -163,6 +164,30 @@ export function makeTower(type, tier) {
       anim.flame = flame;
       anim.core = core;
       muzzle.set(0, 0.6, 0);
+      break;
+    }
+    case 'banner': {
+      // A pole with a cloth that ripples; taller and with more pennants per tier.
+      const pole = 0.75 + tier * 0.12;
+      head.add(mesh(G.cyl(0.035, 0.045, 6), mat(0x4a3424), { y: pole / 2, sy: pole }));
+      head.add(mesh(G.sphere(8), mat(GOLD, { metalness: 0.7, roughness: 0.3 }), { y: pole + 0.03, s: 0.05 }));
+      const cloth = new THREE.Group();
+      cloth.position.set(0.02, pole - 0.2, 0);
+      const flag = mesh(G.box(), mat(accent, { side: THREE.DoubleSide }), { x: 0.17, sx: 0.32, sy: 0.24, sz: 0.012 });
+      cloth.add(flag);
+      cloth.add(mesh(G.box(), mat(GOLD), { x: 0.17, y: -0.135, sx: 0.32, sy: 0.03, sz: 0.014 }));
+      head.add(cloth);
+      anim.cloth = cloth;
+      for (let i = 0; i < tier; i++) {
+        const a = (i / Math.max(1, tier)) * Math.PI * 2 + 0.6;
+        head.add(mesh(G.cone(4), mat(accent), {
+          x: Math.cos(a) * 0.16, z: Math.sin(a) * 0.16, y: 0.25, s: 0.05, sy: 0.12, rz: Math.PI / 2,
+        }));
+      }
+      const glow = mesh(G.oct(), mat(0xffd36a, { emissive: 0xffa040, emissiveIntensity: 1.6 }), { y: 0.12, s: 0.07, shadow: false });
+      head.add(glow);
+      anim.pulse = glow;
+      muzzle.set(0, pole, 0);
       break;
     }
   }

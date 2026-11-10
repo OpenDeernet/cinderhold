@@ -8,6 +8,14 @@ export function fmt(n) {
 
 export function statLines(type, s) {
   const def = TOWERS[type];
+  if (def.kind === 'aura') {
+    return [
+      ['Range', fmt(s.range)],
+      ['Damage boost', `+${Math.round(s.boost * 100)}%`],
+      ['Rate boost', `+${Math.round(s.boost * 50)}%`],
+      ['Targets', 'Towers'],
+    ];
+  }
   // Slow towers differ by hundredths of a shot per second; show them.
   const rate = s.rate < 1 ? s.rate.toFixed(2) : fmt(s.rate);
   const lines = [['Damage', fmt(s.damage)], ['Rate', `${rate}/s`], ['Range', fmt(s.range)]];

@@ -985,6 +985,17 @@ export class World {
       model.head.position.z = Math.sin(-model.head.rotation.y) * k;
     }
     const a = model.anim;
+    if (a.cloth) {
+      a.cloth.rotation.y = Math.sin(t * 2.2 + tower.id) * 0.35;
+      a.cloth.rotation.z = Math.sin(t * 3.1 + tower.id) * 0.05;
+      // A slow golden ring shows the banner's reach.
+      rec.auraTimer = (rec.auraTimer ?? Math.random() * 2.5) - dt;
+      if (rec.auraTimer <= 0) {
+        rec.auraTimer = 2.5;
+        const p = model.root.position;
+        this.rings.spawn(p.x, 0.05, p.z, { color: 0xffc35a, from: 0.3, to: tower.s.range, life: 1.2, opacity: 0.35 });
+      }
+    }
     if (a.spin) a.spin.rotation.y += dt * 1.5;
     if (a.bob) a.bob.position.y = 0.55 + Math.sin(t * 2 + tower.id) * 0.04;
     if (a.pulse) {

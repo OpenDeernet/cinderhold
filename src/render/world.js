@@ -1325,5 +1325,16 @@ export class World {
   render() {
     this.renderer.render(this.scene, this.camera);
   }
+
+  // Renders a frame and returns it as a PNG data URL. Read straight after
+  // rendering, so the drawing buffer does not need to be preserved.
+  capture() {
+    const showHover = this.hover.visible;
+    this.hover.visible = false;
+    this.renderer.render(this.scene, this.camera);
+    const url = this.renderer.domElement.toDataURL('image/png');
+    this.hover.visible = showHover;
+    return url;
+  }
 }
 

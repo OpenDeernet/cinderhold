@@ -80,7 +80,7 @@ export function validateMap(rows) {
 
 export function sanitizeMeta(m) {
   return {
-    name: String(m.name || 'Untitled').replace(/[^\p{L}\p{N} '\-!.,]/gu, '').trim().slice(0, NAME_MAX) || 'Untitled',
+    name: [...String(m.name || 'Untitled').replace(/[^\p{L}\p{N} '\-!.,]/gu, '').trim()].slice(0, NAME_MAX).join('') || 'Untitled',
     theme: THEME_IDS.includes(m.theme) ? m.theme : 'meadow',
     tier: TIERS.some((t) => t.id === m.tier) ? m.tier : 'standard',
     waves: WAVE_CHOICES.includes(m.waves) ? m.waves : 15,

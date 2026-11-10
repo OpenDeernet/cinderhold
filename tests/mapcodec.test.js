@@ -63,6 +63,12 @@ describe('share codes', () => {
     expect(m.waves).toBe(15);
   });
 
+  it('keeps supplementary letters intact at the name limit', () => {
+    const name = 'A'.repeat(31) + '𐐀';
+    expect(decodeMap(encodeMap({ ...blankMap(), name })).name).toBe(name);
+    expect(decodeMap(encodeMap({ ...blankMap(), name: name + 'B' })).name).toBe(name);
+  });
+
   it('reject garbage with a readable error', () => {
     expect(() => decodeMap('hello')).toThrow(/Not a Cinderhold map/);
     expect(() => decodeMap('CH1.!!!')).toThrow(/damaged/);

@@ -286,8 +286,9 @@ export class MapEditor {
         onchange: (e) => this.setMeta({ [key]: parse(e.target.value) }),
       }, options.map(([v, text]) => h('option', { value: v, selected: v === value }, text))));
     return h('div.editor-fields',
-      h('label.editor-field', h('span', 'Name'), h('input', {
-        type: 'text', maxLength: 32, value: this.map.name,
+      h('label.editor-field', h('span', 'Name (up to 32 characters)'), h('input', {
+        // HTML limits UTF-16 units; allow two per code point before sanitizing.
+        type: 'text', maxLength: 64, value: this.map.name,
         onchange: (e) => this.setMeta({ name: e.target.value }),
       })),
       select('Biome', this.map.theme, Object.entries(THEME_NAMES), 'theme'),

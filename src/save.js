@@ -235,7 +235,18 @@ export class Save {
     } catch {
       return false;
     }
-    if (!parsed || parsed.version !== 1 || typeof parsed.levels !== 'object') return false;
+    if (!parsed || parsed.version !== 1 || !parsed.levels || typeof parsed.levels !== 'object' || Array.isArray(parsed.levels)) return false;
+    // Older saves may omit perks; a present value must be usable on reload.
+    if (parsed.perks !== undefined && (!Array.isArray(parsed.perks) || !parsed.perks.every((id) => typeof id === 'string'))) return false;
+    // These collections are used directly by progress and custom-map methods.
+    // Omitted fields retain the defaults for older saves.
+    for (const key of ['seen', 'feats', 'customMaps']) {
+      if (parsed[key] !== undefined && !Array.isArray(parsed[key])) return false;
+    }
+    for (const key of ['daily', 'settings', 'totals']) {
+      const value = parsed[key];
+      if (value !== undefined && (!value || typeof value !== 'object' || Array.isArray(value))) return false;
+    }
     const base = fresh();
     this.data = {
       ...base,

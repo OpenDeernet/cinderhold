@@ -93,6 +93,7 @@ export class Screens {
         this.btn(h('span', 'War Council ', h('span.pill', icon('star', 'icon tiny'), ` ${s.starsFree()}/${stars}`)), () => this.perks()),
         this.btn(h('span', 'Daily Trial ', s.dailyResult(dateKey())?.won ? h('span.pill', '✓ done') : h('span.pill', 'new')), () => this.daily()),
         this.btn('Map Workshop', () => this.workshop()),
+        s.listReplays().length ? this.btn('Replays', () => this.replays()) : null,
         this.btn('Codex', () => this.codex()),
         this.btn(h('span', 'Records ', h('span.pill', `${s.data.feats.length}/${FEATS.length}`)), () => this.records()),
         this.btn('Settings', () => this.settings(() => this.title())),
@@ -617,13 +618,44 @@ export class Screens {
     ));
   }
 
+  // ---------------------------------------------------------------- replays
+
+  replays() {
+    const s = this.save;
+    const list = h('div.replay-list');
+    const items = s.listReplays();
+    if (!items.length) list.appendChild(h('p.muted', 'Finished battles are saved here so you can watch them again.'));
+    for (const r of items) {
+      const res = r.result || {};
+      const when = new Date(r.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+      const outcome = res.status === 'won' ? `Won · ${res.lives}/${res.maxLives} lives` : `Fell at wave ${res.waves}`;
+      list.appendChild(h(`div.replay-item.${res.status === 'won' ? 'won' : 'lost'}`,
+        h('div.replay-info',
+          h('div.level-name', r.name),
+          h('div.level-meta', `${when} · ${DIFFICULTY[r.difficulty]?.label || ''}${r.endless ? ' · Endless' : ''} · ${outcome} · ${fmtTime(res.time || 0)}`),
+        ),
+        this.btn('Watch', () => this.ctx.actions.watchReplay(r.id), 'small.primary'),
+        this.btn('Delete', () => {
+          s.deleteReplay(r.id);
+          this.replays();
+        }, 'small.danger'),
+      ));
+    }
+    this.mount('replays', h('div.panel.wide',
+      h('div.panel-head', h('h2', 'Replays')),
+      h('p.muted', 'The last twelve finished battles. Replays are rebuilt from your commands, so they play out exactly as the battle did. Speed (F) and the camera work while watching; click a tower to inspect it.'),
+      list,
+      h('div.row', this.btn('Back', () => this.title())),
+    ));
+  }
+
   backTarget(game) {
     if (game.level.id.startsWith('custom:')) return 'workshop';
     if (game.level.id.startsWith('daily:')) return 'daily';
     return game.endless ? 'endless' : 'levels';
   }
 
-  result(game, outcome) {
+  result(game, outcome, { replay = false, replayId = null } = {}) {
     const a = this.ctx.actions;
     // Only campaign battles have a next level or a finale.
     const campaign = LEVELS[game.levelIdx] === game.level;
@@ -672,8 +704,14 @@ export class Screens {
         ? h('div.mvp', icon(mvp.type, 'icon'), h('span', 'Best tower: ', h('b', `${TOWERS[mvp.type].name} ${'I'.repeat(mvp.tier + 1)}`),
           ` · ${mvp.kills} kills · ${Math.round(mvp.damage).toLocaleString()} damage`))
         : null,
-      h('div.row',
-        this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(this.backTarget(game))),
+      replay
+        ? h('div.row',
+          this.btn('Replays', () => a.quitToMenu('replays')),
+          this.btn('Watch again', () => a.watchReplay(replayId), 'primary'),
+        )
+        : h('div.row',
+          replayId ? this.btn('Watch replay', () => a.watchReplay(replayId)) : null,
+          this.btn(game.endless ? 'Back' : 'Map', () => a.quitToMenu(this.backTarget(game))),
         this.btn(won ? 'Replay' : 'Try again', () => a.restart(), won && next ? '' : 'primary'),
         won && next ? this.btn('Next battle', () => this.briefing(idx + 1), 'primary') : null,
       ),

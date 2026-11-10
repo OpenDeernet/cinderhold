@@ -10,6 +10,7 @@ import { Save } from './save.js';
 import { checkFeats } from './achievements.js';
 import { customLevel } from './sim/mapcodec.js';
 import { dailyTrial, dateKey, streak } from './sim/daily.js';
+import { makeReplay, ReplayDriver } from './sim/replay.js';
 import { Hud } from './ui/hud.js';
 import { Screens } from './ui/screens.js';
 import { toggleFullscreen } from './ui/dom.js';
@@ -65,7 +66,17 @@ const actions = {
     if (!session || session.demo) return;
     startBattle(session.spec);
   },
+  watchReplay: (id) => {
+    const entry = save.getReplay(id);
+    if (!entry) return;
+    const r = entry.replay;
+    startBattle({
+      level: r.level, levelIdx: r.levelIdx, difficulty: r.difficulty, endless: r.endless, modifiers: r.modifiers,
+      kind: 'replay', replay: r, replayId: id,
+    });
+  },
   quitToMenu: (where = 'levels') => {
+    if (session?.replay) where = 'replays';
     if (session && !session.demo && !session.recorded) recordResult(true);
     hud.detach();
     startDemo();
@@ -73,6 +84,7 @@ const actions = {
     else if (where === 'workshop') screens.workshop();
     else if (where === 'daily') screens.daily();
     else if (where === 'title') screens.title();
+    else if (where === 'replays') screens.replays();
     else screens.levels();
   },
   resume: () => setPaused(false),
@@ -84,7 +96,7 @@ const actions = {
     save.persist();
   },
   callWave: () => {
-    if (!session || session.demo || session.paused) return;
+    if (!commandable() || session.paused) return;
     const g = session.game;
     if (g.waveIndex >= g.totalWaves || g.isOver()) return;
     const bonus = g.callWave();
@@ -95,7 +107,7 @@ const actions = {
     }
   },
   selectBuild: (type) => {
-    if (!session || session.demo) return;
+    if (!commandable()) return;
     if (session.buildType === type) {
       setBuild(null);
       return;
@@ -112,12 +124,12 @@ const actions = {
   deselect: () => select(null),
   upgrade: () => {
     const t = session?.selected;
-    if (!t) return;
+    if (!t || !commandable()) return;
     if (!session.game.upgrade(t.id)) audio.play('error');
   },
   sell: () => {
     const t = session?.selected;
-    if (!t) return;
+    if (!t || !commandable()) return;
     if (!session.game.sell(t.id)) {
       audio.play('error');
       return;
@@ -126,7 +138,7 @@ const actions = {
   },
   cycleTarget: () => {
     const t = session?.selected;
-    if (!t) return;
+    if (!t || !commandable()) return;
     session.game.cycleTargeting(t.id);
     audio.play('click');
   },
@@ -167,19 +179,21 @@ function startDemo() {
 // progress. levelIdx sets the difficulty curve the wave generator uses.
 function startBattle(spec) {
   const { level, levelIdx, difficulty, endless = false, kind = 'campaign', modifiers = [] } = spec;
-  const game = new Game({ level, levelIdx, difficulty, perks: save.data.perks, endless, modifiers });
+  // A replay rebuilds the game from its own recorded setup, perks included.
+  const driver = spec.replay ? new ReplayDriver(spec.replay) : null;
+  const game = driver ? driver.game : new Game({ level, levelIdx, difficulty, perks: save.data.perks, endless, modifiers });
   const speed = [1, 2, 3].includes(save.data.speed) ? save.data.speed : 1;
   session = {
-    game, spec, kind, demo: false, speed, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0,
+    game, spec, kind, demo: false, replay: driver, speed, paused: false, buildType: null, selected: null, recorded: false, earlyCalls: 0,
   };
   world.controls.autoRotate = false;
   world.load(game);
   screens.hide();
-  hud.attach(game, { tutorial: kind === 'campaign' && levelIdx === 0 && !endless && !save.data.tutorialDone });
+  hud.attach(game, { tutorial: kind === 'campaign' && levelIdx === 0 && !endless && !save.data.tutorialDone, replay: !!driver });
   audio.unlock();
   audio.setMusic(level.theme);
   audio.setIntensity(0);
-  hud.announce(level.name, endless ? 'Endless Siege' : level.intro, 'intro');
+  hud.announce(level.name, driver ? 'Replay' : endless ? 'Endless Siege' : level.intro, 'intro');
   hud.setModifiers(modifiers);
 }
 
@@ -211,7 +225,14 @@ function select(tower) {
   hud.select(tower);
 }
 
+// Commands come from the player only in a live battle, not in the title
+// demo or while watching a replay.
+function commandable() {
+  return !!session && !session.demo && !session.replay;
+}
+
 function feats(event, extra = {}) {
+  if (session.replay) return;
   const battle = { earlyCalls: session.earlyCalls, kind: session.kind, streak: streak(save.data.daily, dateKey()) };
   const earned = checkFeats({ event, game: session.game, save, battle, ...extra });
   for (const f of earned) {
@@ -223,6 +244,13 @@ function feats(event, extra = {}) {
 function recordResult(abandoned = false) {
   const g = session.game;
   session.recorded = true;
+  if (session.replay) return null;
+  if (!abandoned) {
+    session.replayId = save.addReplay({
+      name: g.level.name, kind: session.kind, difficulty: g.difficulty, endless: g.endless,
+      result: { status: g.status, waves: g.stats.wavesCleared, lives: g.lives, maxLives: g.maxLives, time: g.time },
+    }, makeReplay(g));
+  }
   save.addPlayTime(g.time);
   save.addTotals(g.stats, g.status === 'won' && !abandoned);
   if (session.kind !== 'campaign') {
@@ -286,7 +314,7 @@ function handleEvents(events) {
         audio.play(ev.type === 'won' ? 'win' : 'lose', { force: true });
         audio.setIntensity(0);
         setTimeout(() => {
-          if (session === s) screens.result(s.game, outcome);
+          if (session === s) screens.result(s.game, outcome, { replay: !!s.replay, replayId: s.replayId || s.spec.replayId });
         }, 1400);
         break;
       }
@@ -343,6 +371,14 @@ canvas.addEventListener('pointerup', (e) => {
   const btn = down.button;
   down = null;
   if (moved > 6 || !session || session.demo || session.paused) return;
+  if (session.replay) {
+    // Watching: clicks only inspect towers.
+    if (btn === 0) {
+      const tile = world.pickTile(e.clientX, e.clientY);
+      select(tile ? session.game.towerAt(tile.c, tile.r) : null);
+    }
+    return;
+  }
   lastPointer = { x: e.clientX, y: e.clientY };
   if (btn === 2) {
     setBuild(null);
@@ -426,6 +462,11 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   if (session.paused || session.game.isOver()) return;
+  if (session.replay) {
+    if (e.code === 'KeyF') actions.setSpeed((session.speed % 3) + 1);
+    if (e.code === 'KeyC' || e.code === 'Home') world.frameCamera();
+    return;
+  }
   const n = Number(e.key);
   if (n >= 1 && n <= TOWER_ORDER.length) {
     actions.selectBuild(TOWER_ORDER[n - 1]);

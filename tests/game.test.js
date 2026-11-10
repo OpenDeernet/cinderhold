@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LEVELS } from '../src/sim/data/levels.js';
 import { Game, TICK } from '../src/sim/game.js';
-import { generateWave, waveSummary } from '../src/sim/waves.js';
+import { generateWave, waveSummary, waveTraits } from '../src/sim/waves.js';
 
 const TEST_LEVEL = {
   id: 'test',
@@ -265,6 +265,13 @@ describe('waves', () => {
         for (const { type } of waveSummary(wave)) expect(allowed.has(type), `${level.id} w${w} ${type}`).toBe(true);
       }
     }
+  });
+
+  it('describe what each wave asks of the defence', () => {
+    const wave = { groups: [{ type: 'wisp', count: 4 }, { type: 'brute', count: 2 }, { type: 'swarm', count: 30 }] };
+    expect(waveTraits(wave).sort()).toEqual(['air', 'armored', 'swarm']);
+    expect(waveTraits({ groups: [{ type: 'colossus', count: 1 }, { type: 'mender', count: 2 }] }).sort()).toEqual(['armored', 'boss', 'healers']);
+    expect(waveTraits({ groups: [{ type: 'grunt', count: 5 }] })).toEqual([]);
   });
 
   it('place every boss on its wave', () => {

@@ -118,8 +118,7 @@ export class Bot {
     const t = g.build(type, tile.c, tile.r);
     if (t) {
       this.built++;
-      if (type === 'mortar' || type === 'cannon') t.mode = 'first';
-      if (type === 'tesla') t.mode = 'strong';
+      if (type === 'tesla') g.setTargeting(t.id, 'strong');
     }
     return !!t;
   }

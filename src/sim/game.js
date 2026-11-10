@@ -54,7 +54,12 @@ export class Game {
     this.occupied = new Map();
 
     this.time = 0;
+    this.ticks = 0;
     this.acc = 0;
+    // Every successful player command, stamped with the tick it happened
+    // before. The simulation is deterministic, so this is a full replay.
+    this.log = [];
+    this.beforeTick = null;
     this.nextId = 1;
     this.countdown = null;
     this.status = 'ready'; // ready | playing | won | lost
@@ -166,6 +171,7 @@ export class Game {
     this.towers.push(t);
     this.occupied.set(r * this.map.w + c, t.id);
     this.stats.built++;
+    this.record('build', type, c, r);
     this.emit({ type: 'build', tower: t });
     return t;
   }
@@ -181,6 +187,7 @@ export class Game {
     t.invested += cost;
     t.touchedAt = this.time;
     t.s = this.towerStats(t.type, t.tier);
+    this.record('upgrade', id);
     this.emit({ type: 'upgrade', tower: t });
     return true;
   }
@@ -197,6 +204,7 @@ export class Game {
     this.gold += value;
     this.towers.splice(i, 1);
     this.occupied.delete(t.r * this.map.w + t.c);
+    this.record('sell', id);
     this.emit({ type: 'sell', tower: t, value });
     return true;
   }
@@ -205,7 +213,16 @@ export class Game {
     const t = this.towers.find((x) => x.id === id);
     if (!t) return null;
     t.mode = TARGET_MODES[(TARGET_MODES.indexOf(t.mode) + 1) % TARGET_MODES.length];
+    this.record('target', id);
     return t.mode;
+  }
+
+  setTargeting(id, mode) {
+    const t = this.towers.find((x) => x.id === id);
+    if (!t || !TARGET_MODES.includes(mode)) return false;
+    t.mode = mode;
+    this.record('mode', id, mode);
+    return true;
   }
 
   // Launches the next wave now. Calling early (while a countdown is running or
@@ -222,8 +239,13 @@ export class Game {
       this.gold += bonus;
       this.stats.goldEarned += bonus;
     }
+    this.record('wave');
     this.launchWave();
     return bonus;
+  }
+
+  record(op, ...args) {
+    this.log.push([this.ticks, op, ...args]);
   }
 
   launchWave() {
@@ -246,6 +268,7 @@ export class Game {
     this.acc += Math.min(dt, TICK * MAX_TICKS_PER_UPDATE);
     let n = 0;
     while (this.acc >= TICK && n < MAX_TICKS_PER_UPDATE) {
+      this.beforeTick?.();
       this.tick();
       this.acc -= TICK;
       n++;
@@ -259,6 +282,7 @@ export class Game {
 
   tick() {
     const dt = TICK;
+    this.ticks++;
     this.time += dt;
     this.updateSpawners(dt);
     this.updateEnemies(dt);

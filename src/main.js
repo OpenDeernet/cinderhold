@@ -259,7 +259,7 @@ function recordResult(abandoned = false) {
     }, makeReplay(g));
   }
   save.addPlayTime(g.time);
-  save.addTotals(g.stats, g.status === 'won' && !abandoned);
+  if (!session.replay) save.addTotals(g.stats, g.status === 'won' && !abandoned, g.towerSummary());
   if (session.kind !== 'campaign') {
     save.persist();
     return actions.onCustomResult?.(session, abandoned) ?? null;

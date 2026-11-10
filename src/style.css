@@ -1289,6 +1289,20 @@ button {
 .stats.records {
   margin: 0 0 16px;
 }
+.tower-stats th {
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-mute);
+  padding: 2px 8px;
+}
+.tower-stats th:first-child,
+.tower-stats td:first-child {
+  text-align: left;
+}
+.tower-stats td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 .feat-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));

@@ -127,6 +127,21 @@ describe('combat', () => {
     expect(g.stats.wavesCleared).toBe(4);
   });
 
+  it('summarises towers by type', () => {
+    const g = new Game({ level: TEST_LEVEL });
+    const a = g.build('bolt', 2, 0);
+    g.build('bolt', 3, 0);
+    const c = g.build('cannon', 4, 0);
+    a.kills = 3;
+    a.damage = 100;
+    c.damage = 40;
+    g.sell(g.towers[1].id);
+    expect(g.towerSummary()).toEqual({
+      bolt: { built: 2, kills: 3, damage: 100 },
+      cannon: { built: 1, kills: 0, damage: 40 },
+    });
+  });
+
   it('samples a timeline for the result chart', () => {
     const g = new Game({ level: { ...TEST_LEVEL, lives: 3 } });
     g.callWave();

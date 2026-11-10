@@ -71,7 +71,7 @@ export class Game {
     // Sampled every few seconds for the post-battle chart.
     this.timeline = [];
     this.nextSample = 0;
-    this.stats = { kills: 0, leaks: 0, goldEarned: 0, goldSpent: 0, built: 0, wavesCleared: 0, killsByType: {} };
+    this.stats = { kills: 0, leaks: 0, goldEarned: 0, goldSpent: 0, built: 0, wavesCleared: 0, killsByType: {}, builtByType: {} };
   }
 
   // ---------------------------------------------------------------- queries
@@ -177,6 +177,7 @@ export class Game {
     this.occupied.set(r * this.map.w + c, t.id);
     this.refreshAuras();
     this.stats.built++;
+    this.stats.builtByType[type] = (this.stats.builtByType[type] || 0) + 1;
     this.record('build', type, c, r);
     this.emit({ type: 'build', tower: t });
     return t;
@@ -790,6 +791,21 @@ export class Game {
     if (this.modifiers.has('lean')) m *= 0.65;
     if (this.modifiers.has('stubborn')) m *= 1.2;
     return m;
+  }
+
+  // Per tower type: how many were built, and the kills and damage of those
+  // still standing (sold towers take their numbers with them).
+  towerSummary() {
+    const out = {};
+    for (const t of this.towers) {
+      const o = out[t.type] || (out[t.type] = { built: 0, kills: 0, damage: 0 });
+      o.kills += t.kills;
+      o.damage += t.damage;
+    }
+    for (const [type, n] of Object.entries(this.stats.builtByType)) {
+      (out[type] || (out[type] = { built: 0, kills: 0, damage: 0 })).built = n;
+    }
+    return out;
   }
 
   stars() {

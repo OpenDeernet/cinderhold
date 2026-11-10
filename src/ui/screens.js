@@ -470,9 +470,20 @@ export class Screens {
         h('div', h('div.feat-name', f.name), h('div.feat-blurb', f.blurb)),
       );
     }));
+    const byTower = t.byTower || {};
+    const towerRows = TOWER_ORDER.filter((id) => byTower[id]?.built).map((id) => {
+      const v = byTower[id];
+      return h('tr', h('td', icon(id, 'icon small'), ` ${TOWERS[id].name}`), h('td', v.built.toLocaleString()),
+        h('td', v.kills.toLocaleString()), h('td', v.damage.toLocaleString()));
+    });
     this.mount('records', h('div.panel.wide',
       h('div.panel-head', h('h2', 'Records'), h('div.pill', `${s.data.feats.length} / ${FEATS.length} feats`)),
       h('table.stats.records', lines.map(([k, v]) => h('tr', h('td', k), h('td', v)))),
+      towerRows.length
+        ? h('table.stats.records.tower-stats',
+          h('tr', h('th', 'Tower'), h('th', 'Built'), h('th', 'Kills'), h('th', 'Damage')),
+          towerRows)
+        : null,
       feats,
       h('div.row', this.btn('Back', () => this.title())),
     ));

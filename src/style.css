@@ -1512,6 +1512,22 @@ body.photo-mode #overlay {
 .day.today {
   outline: 2px solid var(--accent);
 }
+.planning {
+  position: absolute;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(30, 50, 90, 0.85);
+  border: 1px solid rgba(126, 200, 255, 0.5);
+  font-size: 14px;
+  pointer-events: none !important;
+  white-space: nowrap;
+}
+.planning[hidden] {
+  display: none;
+}
 .mods {
   position: absolute;
   top: 58px;

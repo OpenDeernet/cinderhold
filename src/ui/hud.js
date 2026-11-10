@@ -78,6 +78,8 @@ export class Hud {
     this.bossBar.hidden = true;
 
     this.modsEl = h('div.mods');
+    this.planning = h('div.planning', 'Planning — the next wave waits for you. Press ', h('b', 'Space'), ' to send it.');
+    this.planning.hidden = true;
 
     this.announceEl = h('div.announce');
     this.cards = h('div.cards');
@@ -85,10 +87,11 @@ export class Hud {
     this.hint.hidden = true;
     this.vignette = h('div.vignette');
 
-    this.el.append(this.vignette, this.top, this.modsEl, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
+    this.el.append(this.vignette, this.top, this.modsEl, this.planning, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
   attach(game, { tutorial, replay = false }) {
+    this.planning.hidden = true;
     this.el.classList.toggle('replay', replay);
     this.game = game;
     this.cache = {};
@@ -236,6 +239,10 @@ export class Hud {
 
   setBuild(type) {
     this.buildType = type;
+  }
+
+  setPlanning(on) {
+    this.planning.hidden = !on;
   }
 
   // Active Daily Trial modifiers, under the resource counters.

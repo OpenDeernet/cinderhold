@@ -573,6 +573,7 @@ export class Screens {
       check('Reduce motion (no screen shake or flashes)', 'reduceMotion'),
       check('Colour-blind friendly signals (blue / orange)', 'colorblind'),
       check('Placement heatmap while building (H)', 'heatmap'),
+      check('Hold between waves until I send the next one', 'planPause'),
       check('Show frame rate', 'showFps'),
       h('div.row',
         this.btn('Transfer save', () => this.transfer(back)),

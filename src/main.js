@@ -101,6 +101,7 @@ const actions = {
     if (!commandable() || session.paused) return;
     const g = session.game;
     if (g.waveIndex >= g.totalWaves || g.isOver()) return;
+    setPlanning(false);
     const bonus = g.callWave();
     if (bonus > 0) {
       session.earlyCalls++;
@@ -237,6 +238,14 @@ function refreshHeatmap() {
   world.setHeatmap(session?.game, save.settings.heatmap && session?.buildType ? session.buildType : null);
 }
 
+// Planning pause: the battle holds between waves until the player sends the
+// next one. Unlike a real pause, building and upgrading still work.
+function setPlanning(on) {
+  if (!session || !!session.planning === on) return;
+  session.planning = on;
+  hud.setPlanning(on);
+}
+
 // Commands come from the player only in a live battle, not in the title
 // demo or while watching a replay.
 function commandable() {
@@ -312,6 +321,7 @@ function handleEvents(events) {
         break;
       case 'cleared':
         if (ev.index >= 1) hud.tutorialEvent('cleared2');
+        if (save.settings.planPause && !s.replay && s.game.waveIndex < s.game.totalWaves) setPlanning(true);
         if (s.game.endless) feats('cleared');
         break;
       case 'leak':
@@ -734,7 +744,7 @@ function frame(now) {
 
   const g = session.game;
   let alpha = 1;
-  if (!session.paused) {
+  if (!session.paused && !session.planning) {
     const dt = realDt * session.speed;
     if (session.bot) session.bot.update(dt);
     alpha = g.update(dt);

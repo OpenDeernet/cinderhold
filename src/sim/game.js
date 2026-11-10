@@ -2,6 +2,8 @@ import { ENEMIES } from './data/enemies.js';
 import { TOWERS, TARGET_MODES, towerTier, towerInvested } from './data/towers.js';
 import { parseMap, routePos, TILE } from './map.js';
 import { generateWave } from './waves.js';
+import { ABILITIES, chestGold, meteorDamage } from './data/abilities.js';
+import { LEVELS } from './data/levels.js';
 
 export const TICK = 1 / 30;
 const AUTO_WAVE_DELAY = 14;
@@ -65,6 +67,9 @@ export class Game {
     // before. The simulation is deterministic, so this is a full replay.
     this.log = [];
     this.beforeTick = null;
+    // Ability id -> game time when it is ready again; pending meteor strikes.
+    this.cooldowns = {};
+    this.strikes = [];
     this.nextId = 1;
     this.countdown = null;
     this.status = 'ready'; // ready | playing | won | lost
@@ -226,6 +231,66 @@ export class Game {
     return t.mode;
   }
 
+  // ---------------------------------------------------------------- abilities
+
+  abilityAllowed(id) {
+    const a = ABILITIES[id];
+    if (!a) return false;
+    if (this.level.abilities) return this.level.abilities.includes(id);
+    // Campaign levels unlock abilities as the story goes on.
+    const campaign = !this.endless && LEVELS.some((l) => l.id === this.level.id);
+    return !campaign || this.levelIdx >= a.from;
+  }
+
+  abilityReadyIn(id) {
+    return Math.max(0, (this.cooldowns[id] || 0) - this.time);
+  }
+
+  canCast(id) {
+    return this.abilityAllowed(id) && !this.isOver() && this.status === 'playing' && this.abilityReadyIn(id) === 0;
+  }
+
+  // Uses an ability; targeted ones need a point on the map.
+  cast(id, x = 0, y = 0) {
+    if (!this.canCast(id)) return false;
+    const a = ABILITIES[id];
+    if (a.targeted && (x < 0 || y < 0 || x > this.map.w || y > this.map.h)) return false;
+    this.cooldowns[id] = this.time + a.cooldown;
+    this.record('cast', id, x, y);
+    switch (id) {
+      case 'meteor':
+        this.strikes.push({ x, y, t: a.delay, damage: meteorDamage(this.waveIndex), radius: a.radius });
+        break;
+      case 'nova':
+        for (const e of this.enemies) if (!e.dead) this.applySlow(e, a.slow, a.duration);
+        break;
+      case 'chest': {
+        const gold = chestGold(this.waveIndex);
+        this.gold += gold;
+        this.stats.goldEarned += gold;
+        this.emit({ type: 'chest', gold });
+        break;
+      }
+    }
+    this.emit({ type: 'cast', ability: id, x, y });
+    return true;
+  }
+
+  updateStrikes(dt) {
+    if (!this.strikes.length) return;
+    for (const st of this.strikes) {
+      st.t -= dt;
+      if (st.t > 0) continue;
+      const r2 = st.radius * st.radius;
+      for (const e of this.enemies) {
+        if (!targetable(e) || e.air) continue;
+        if ((e.x - st.x) ** 2 + (e.y - st.y) ** 2 <= r2) this.damage(e, st.damage, 'energy', null);
+      }
+      this.emit({ type: 'meteor', x: st.x, y: st.y, radius: st.radius });
+    }
+    this.strikes = this.strikes.filter((st) => st.t > 0);
+  }
+
   setTargeting(id, mode) {
     const t = this.towers.find((x) => x.id === id);
     if (!t || !TARGET_MODES.includes(mode)) return false;
@@ -297,6 +362,7 @@ export class Game {
     this.updateEnemies(dt);
     this.updateTowers(dt);
     this.updateProjectiles(dt);
+    this.updateStrikes(dt);
     this.reap();
     this.updateFlow(dt);
     if (this.time >= this.nextSample || this.isOver()) this.sample();

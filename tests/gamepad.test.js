@@ -31,6 +31,14 @@ describe('GamepadInput', () => {
     expect(g.update(0.016).presses).toEqual(['confirm']);
   });
 
+  it('maps the stick clicks to abilities', () => {
+    const f = fakePad();
+    const g = new GamepadInput(() => [f.pad]);
+    f.press(BUTTON.L3);
+    f.press(BUTTON.R3);
+    expect(g.update(0.016).presses).toEqual(['meteor', 'nova']);
+  });
+
   it('treats a half-pulled analog trigger as pressed', () => {
     const f = fakePad();
     const g = new GamepadInput(() => [f.pad]);

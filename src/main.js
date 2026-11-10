@@ -549,6 +549,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (session.paused || session.game.isOver()) return;
   if (session.replay) {
+    if (e.code === 'KeyK') hud.meter.toggle();
     if (e.code === 'KeyF') actions.setSpeed((session.speed % 3) + 1);
     if (e.code === 'KeyC' || e.code === 'Home') world.frameCamera();
     return;
@@ -585,6 +586,9 @@ window.addEventListener('keydown', (e) => {
       break;
     case 'KeyZ':
       actions.useAbility('chest');
+      break;
+    case 'KeyK':
+      hud.meter.toggle();
       break;
     case 'KeyN':
       save.settings.minimap = !save.settings.minimap;
@@ -737,6 +741,14 @@ function padIntent(intent) {
       break;
     case 'pause':
       actions.togglePause();
+      break;
+    // Meteor lands straight on the pad cursor; no separate aiming step.
+    case 'meteor':
+      if (commandable() && padTile && g.cast('meteor', padTile.c + 0.5, padTile.r + 0.5)) break;
+      audio.play('error');
+      break;
+    case 'nova':
+      actions.useAbility('nova');
       break;
     case 'prevTower':
     case 'nextTower': {

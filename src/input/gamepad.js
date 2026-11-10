@@ -13,9 +13,10 @@
 //   RT                   cycle game speed
 //   Back / Select        show every tower's range
 //   Start / Options      pause
+//   L3 / R3              Meteor at the cursor / Frost Nova
 
 export const BUTTON = {
-  A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15,
+  A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, L3: 10, R3: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15,
 };
 
 const PRESS_EVENTS = [
@@ -29,6 +30,8 @@ const PRESS_EVENTS = [
   [BUTTON.RT, 'speed'],
   [BUTTON.BACK, 'ranges'],
   [BUTTON.START, 'pause'],
+  [BUTTON.L3, 'meteor'],
+  [BUTTON.R3, 'nova'],
 ];
 
 const DEADZONE = 0.35;

@@ -14,6 +14,7 @@ const OPS = {
   sell: (g, id) => g.sell(id),
   target: (g, id) => g.cycleTargeting(id),
   mode: (g, id, mode) => g.setTargeting(id, mode),
+  cast: (g, id, x, y) => g.cast(id, x, y),
   wave: (g) => g.callWave(),
 };
 

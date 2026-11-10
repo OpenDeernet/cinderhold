@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.0
+
+- Replays: every finished battle is saved (last twelve) and can be watched
+  again; the deterministic simulation rebuilds it from the command log.
+- Commander abilities: Meteor, Frost Nova and War Chest with cooldowns,
+  unlocked during the campaign.
+- New tower: the War Banner, a support tower that boosts nearby towers.
+- New enemy: the Cinder Mole, which tunnels under the road out of reach.
+- Tower veterancy: ranks at 25, 75 and 200 kills for extra damage.
+- Gamepad support for battles and menus.
+- Placement heatmap while building, a minimap, a damage meter, a three-wave
+  forecast with wave tags, and an optional hold between waves.
+- Random maps in the Workshop, a two-week history on the Daily Trial screen,
+  an endless leaderboard, per-tower lifetime stats and a photo mode.
+- Passing weather: rain, fen thunderstorms and desert sandstorms.
+- Colour-blind friendly palette option.
+- Fixes: stricter save import validation, map names cut at whole
+  characters, the bot now changes targeting through a real command.
+
 ## 1.2.0
 
 - Map Workshop: a tile editor with undo/redo, live route preview and

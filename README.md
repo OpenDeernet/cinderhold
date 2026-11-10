@@ -14,11 +14,13 @@ heart of the ash.
 
 - **10-level campaign** across six biomes (meadow, autumn woods, desert, snow,
   fen and volcanic caldera), 10 to 25 waves each, with two boss types.
-- **6 towers, 3 tiers each**: Bolt Turret, Ember Cannon, Rime Spire, Storm Coil,
-  Siege Mortar and Cinder Brazier. Each has its own role: anti-air, splash,
-  slow, armor-piercing chains, long-range artillery, area burn.
-- **10 enemy types** with distinct mechanics: armor, regenerating shields,
-  healers, fliers, units that split on death, and two bosses.
+- **7 towers, 3 tiers each**: Bolt Turret, Ember Cannon, Rime Spire, Storm Coil,
+  Siege Mortar, Cinder Brazier and the War Banner. Each has its own role:
+  anti-air, splash, slow, armor-piercing chains, long-range artillery, area
+  burn and support. Towers earn veteran ranks from kills.
+- **Commander abilities**: Meteor, Frost Nova and War Chest on cooldowns.
+- **11 enemy types** with distinct mechanics: armor, regenerating shields,
+  healers, fliers, units that split on death, tunnellers, and two bosses.
 - **Targeting modes** per tower (first, last, strongest, closest), selling,
   early-wave bonuses, 1×/2×/3× speed.
 - **Three difficulties**, star ratings, and a **War Council** of twelve perks
@@ -33,8 +35,11 @@ heart of the ash.
 - **Codex** with full per-tier tower stats and enemy kill counts, an in-game
   tutorial on the first level, and a live bot-played battle behind the title
   screen.
-- Boss health bar, mortar landing markers, range overlay (R), reduce-motion
-  setting and automatic graphics fallback on slow machines.
+- **Replays** of every finished battle, rebuilt exactly from your commands.
+- Minimap, damage meter, placement heatmap, three-wave forecast, boss health
+  bar, mortar landing markers, range overlay (R), photo mode, passing weather.
+- Gamepad support, colour-blind palette, reduce-motion setting, optional
+  hold between waves and automatic graphics fallback on slow machines.
 - All models are built from primitives in code, all sound effects and music
   are synthesised at runtime with the Web Audio API, and icons are
   hand-written SVG. No external assets, no network calls, no API keys.
@@ -106,8 +111,12 @@ src/
     bot.js        auto-player used by tests, the playthrough script and the title demo
     daily.js      Daily Trial generation and win streaks
     mapcodec.js   custom map validation and share codes
+    mapgen.js     random map generator
+    replay.js     replays from the recorded command log
+    coverage.js   road coverage scores (bot and placement heatmap)
   render/         Three.js scene: board, models, effects, camera
   audio/          Web Audio sound effects and generative music
+  input/          gamepad input
   ui/             HUD and menu screens (plain DOM)
   assets/icons/   SVG icons
   save.js         localStorage persistence

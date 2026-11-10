@@ -100,7 +100,7 @@ export class Screens {
         this.btn('Settings', () => this.settings(() => this.title())),
         this.btn('How to Play', () => this.help(() => this.title())),
       ),
-      h('div.footer', `Played ${fmtTime(s.data.playSeconds)}  ·  v1.2  ·  `, h('a', { href: '#', onclick: (e) => { e.preventDefault(); this.credits(); } }, 'Credits')),
+      h('div.footer', `Played ${fmtTime(s.data.playSeconds)}  ·  v1.3  ·  `, h('a', { href: '#', onclick: (e) => { e.preventDefault(); this.credits(); } }, 'Credits')),
     );
     a.onTitle();
     this.mount('title', node, { dim: false });

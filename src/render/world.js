@@ -1230,6 +1230,34 @@ export class World {
     this.controls.target.add(move);
   }
 
+  // Gamepad camera: yaw around the target and move in or out.
+  orbit(yaw, zoom) {
+    const t = this.controls.target;
+    const off = this.tmp.subVectors(this.camera.position, t);
+    const r = Math.hypot(off.x, off.z);
+    const a = Math.atan2(off.z, off.x) + yaw;
+    off.x = Math.cos(a) * r;
+    off.z = Math.sin(a) * r;
+    const len = off.length();
+    const next = Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, len + zoom));
+    off.multiplyScalar(next / len);
+    this.camera.position.copy(t).add(off);
+    this.camera.lookAt(t);
+  }
+
+  // Turns a screen-space step (right, down) into a grid step, so pushing up
+  // always moves the cursor away from the camera.
+  screenToGrid(dx, dy) {
+    if (!dx && !dy) return [0, 0];
+    const fwd = this.camera.getWorldDirection(this.tmp2);
+    const fx = fwd.x;
+    const fz = fwd.z;
+    // Snap the camera's forward direction to the nearest grid axis.
+    const [ax, az] = Math.abs(fx) > Math.abs(fz) ? [Math.sign(fx), 0] : [0, Math.sign(fz)];
+    // Screen up is forward; screen right is forward rotated a quarter turn.
+    return [Math.round(dx * -az + -dy * ax), Math.round(dx * ax + -dy * az)];
+  }
+
   clampTarget() {
     if (!this.map) return;
     const t = this.controls.target;

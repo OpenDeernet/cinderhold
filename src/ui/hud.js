@@ -83,7 +83,8 @@ export class Hud {
     this.el.append(this.vignette, this.top, this.modsEl, this.bossBar, this.waveBox, this.bar, this.tip, this.panel, this.announceEl, this.cards, this.hint);
   }
 
-  attach(game, { tutorial }) {
+  attach(game, { tutorial, replay = false }) {
+    this.el.classList.toggle('replay', replay);
     this.game = game;
     this.cache = {};
     this.selected = null;

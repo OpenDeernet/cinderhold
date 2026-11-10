@@ -549,6 +549,7 @@ export class Screens {
       check('Mute all (M)', 'muted'),
       h('div.setting', h('span', 'Graphics'), quality),
       check('Reduce motion (no screen shake or flashes)', 'reduceMotion'),
+      check('Colour-blind friendly signals (blue / orange)', 'colorblind'),
       check('Placement heatmap while building (H)', 'heatmap'),
       check('Show frame rate', 'showFps'),
       h('div.row',

@@ -31,7 +31,7 @@ function fresh() {
     daily: {}, // date -> { won, lives, maxLives, wavesCleared, attempts }
     customMaps: [],
     replays: [], // { id, name, kind, difficulty, date, result, replay } // { id, name, theme, tier, waves, rows, updated, wins }
-    totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {} },
+    totals: { kills: 0, built: 0, battles: 0, wins: 0, byType: {}, byTower: {} },
   };
 }
 
@@ -159,8 +159,15 @@ export class Save {
   }
 
   // Adds a finished battle's numbers to the lifetime totals.
-  addTotals(stats, won) {
+  addTotals(stats, won, towers = {}) {
     const t = this.data.totals;
+    t.byTower = t.byTower || {};
+    for (const [type, v] of Object.entries(towers)) {
+      const o = t.byTower[type] || (t.byTower[type] = { built: 0, kills: 0, damage: 0 });
+      o.built += v.built;
+      o.kills += v.kills;
+      o.damage += Math.round(v.damage);
+    }
     t.kills += stats.kills;
     t.byType = t.byType || {};
     for (const [type, n] of Object.entries(stats.killsByType || {})) t.byType[type] = (t.byType[type] || 0) + n;

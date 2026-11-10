@@ -1,6 +1,7 @@
 import { TOWERS } from './data/towers.js';
 import { ENEMIES } from './data/enemies.js';
 import { createRng } from './rng.js';
+import { sampleRoads, tileScore } from './coverage.js';
 
 // A simple auto-player. It drives the title-screen demo and the headless
 // playthrough that checks every level can be beaten and runs cleanly.
@@ -15,27 +16,11 @@ export class Bot {
     this.skill = skill;
     this.callEarly = callEarly;
     this.think = 0;
-    this.samples = this.sampleRoads();
+    this.samples = sampleRoads(game.map);
     this.needsAir = game.level.pool.some((p) => ENEMIES[p.type].air) ||
       (game.level.bosses || []).some((b) => ENEMIES[b.type].air) || game.endless;
     this.rotation = this.makeRotation();
     this.built = 0;
-  }
-
-  sampleRoads() {
-    const pts = [];
-    for (const route of this.game.map.routes) {
-      for (let d = 0; d < route.length; d += 0.5) {
-        let i = 0;
-        while (i < route.points.length - 2 && route.cum[i + 1] < d) i++;
-        const a = route.points[i];
-        const b = route.points[i + 1];
-        const seg = route.cum[i + 1] - route.cum[i];
-        const t = seg > 0 ? (d - route.cum[i]) / seg : 0;
-        pts.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
-      }
-    }
-    return pts;
   }
 
   makeRotation() {
@@ -46,22 +31,8 @@ export class Bot {
   }
 
   coverage(c, r, type) {
-    const s = TOWERS[type].tiers[0];
-    // A banner is worth the towers it would cover, not the road.
-    if (TOWERS[type].kind === 'aura') {
-      const r2 = s.range * s.range;
-      return this.game.towers.filter((t) => TOWERS[t.type].kind !== 'aura' && (t.x - c - 0.5) ** 2 + (t.y - r - 0.5) ** 2 <= r2).length * 40;
-    }
-    const range = s.range;
-    const min = s.minRange || 0;
-    const x = c + 0.5;
-    const y = r + 0.5;
-    let n = 0;
-    for (const p of this.samples) {
-      const d = Math.hypot(p.x - x, p.y - y);
-      if (d <= range && d >= min) n++;
-    }
-    return n;
+    // The bot plans with base stats, like a player reading the build bar.
+    return tileScore(this.game, this.samples, type, c, r, TOWERS[type].tiers[0]);
   }
 
   bestTile(type) {

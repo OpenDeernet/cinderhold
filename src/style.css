@@ -1396,6 +1396,29 @@ button {
   color: var(--ink-mute);
 }
 
+/* ------------------------------------------------------------ minimap */
+
+.minimap {
+  position: absolute;
+  right: 12px;
+  bottom: 96px;
+  width: 180px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--panel-edge);
+  box-shadow: var(--shadow);
+  image-rendering: pixelated;
+  cursor: pointer;
+  opacity: 0.9;
+}
+.minimap[hidden] {
+  display: none;
+}
+.tower-panel:not([hidden]) ~ .minimap,
+.hud:has(.tower-panel:not([hidden])) .minimap {
+  display: none;
+}
+
 /* ------------------------------------------------------------ abilities */
 
 .ability-bar {
@@ -1825,6 +1848,11 @@ body.photo-mode #overlay {
   }
   .ability-bar {
     bottom: 84px;
+  }
+  .minimap {
+    width: 120px;
+    top: 150px;
+    bottom: auto;
   }
   .ability-btn {
     width: 46px;

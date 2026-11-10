@@ -81,6 +81,7 @@ browser's localStorage.
 | F | Cycle game speed |
 | Esc / P | Cancel, deselect, pause |
 | G | Toggle fullscreen |
+| N | Show or hide the minimap |
 | O | Photo mode; Enter saves a PNG of the view |
 | M | Mute |
 

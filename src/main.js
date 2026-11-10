@@ -144,6 +144,8 @@ const actions = {
     }
     g.cast(id);
   },
+  // Minimap click: slide the camera so it looks at this point.
+  lookAt: (x, y) => world.lookAt(x, y),
   deselect: () => select(null),
   upgrade: () => {
     const t = session?.selected;
@@ -170,6 +172,7 @@ const actions = {
     world.reduceMotion = save.settings.reduceMotion;
     world.setPalette(save.settings.colorblind ? 'colorblind' : 'standard');
     document.body.classList.toggle('colorblind', !!save.settings.colorblind);
+    hud.setMinimap(save.settings.minimap);
     refreshHeatmap();
     if (world.quality !== save.settings.quality) world.setQuality(save.settings.quality);
   },
@@ -579,6 +582,11 @@ window.addEventListener('keydown', (e) => {
       break;
     case 'KeyZ':
       actions.useAbility('chest');
+      break;
+    case 'KeyN':
+      save.settings.minimap = !save.settings.minimap;
+      save.persist();
+      hud.setMinimap(save.settings.minimap);
       break;
     case 'KeyH':
       save.settings.heatmap = !save.settings.heatmap;

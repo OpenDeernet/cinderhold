@@ -10,6 +10,7 @@ const SPAWN_INTERVAL = {
   mender: 1.6,
   warden: 1.4,
   splitter: 1.4,
+  burrower: 1.3,
   colossus: 0,
   stormwing: 0,
 };
@@ -110,6 +111,7 @@ export const ENDLESS_POOL = [
   { type: 'mender', from: 10 },
   { type: 'warden', from: 13 },
   { type: 'splitter', from: 16 },
+  { type: 'burrower', from: 19 },
 ];
 
 function budgetBase(bw, levelIdx) {

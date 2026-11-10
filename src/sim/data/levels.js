@@ -220,7 +220,7 @@ export const LEVELS = [
     id: 'mirefen',
     name: 'Mirefen',
     theme: 'swamp',
-    intro: 'Clinkers burst into cinderlings, and something large circles above the fen.',
+    intro: 'Clinkers burst into cinderlings, Cinder Moles tunnel under the mud, and something large circles above the fen.',
     startGold: 340,
     lives: 20,
     waves: 20,
@@ -234,6 +234,7 @@ export const LEVELS = [
       { type: 'warden', from: 1 },
       { type: 'mender', from: 2 },
       { type: 'splitter', from: 3 },
+      { type: 'burrower', from: 9 },
     ],
     bosses: [{ wave: 19, type: 'stormwing' }],
     map: [
@@ -270,6 +271,7 @@ export const LEVELS = [
       { type: 'warden', from: 0 },
       { type: 'mender', from: 1 },
       { type: 'splitter', from: 1 },
+      { type: 'burrower', from: 6 },
     ],
     bosses: [
       { wave: 12, type: 'stormwing' },
@@ -308,6 +310,7 @@ export const LEVELS = [
       { type: 'warden', from: 0 },
       { type: 'mender', from: 0 },
       { type: 'splitter', from: 0 },
+      { type: 'burrower', from: 8 },
     ],
     bosses: [
       { wave: 9, type: 'colossus' },

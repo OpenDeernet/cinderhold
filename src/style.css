@@ -1510,6 +1510,9 @@ body.photo-mode #overlay {
   font-size: 14px;
   box-shadow: none;
 }
+.row.tight {
+  margin-top: 0;
+}
 .map-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

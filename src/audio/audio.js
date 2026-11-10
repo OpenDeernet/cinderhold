@@ -238,6 +238,10 @@ export class Audio {
       case 'heal':
         this.tone({ freq: 520, to: 880, dur: 0.25, type: 'sine', vol: 0.05, attack: 0.05 });
         break;
+      case 'thunder':
+        this.hiss({ dur: 2.4, freq: 600, to: 60, vol: 0.3, attack: 0.08, at: 0.3 + Math.random() * 0.6 });
+        this.tone({ freq: 50, to: 30, dur: 2, vol: 0.2, at: 0.35, attack: 0.1 });
+        break;
       case 'whoosh':
         this.hiss({ dur: 0.9, freq: 300, to: 2400, type: 'bandpass', q: 2, vol: 0.2, attack: 0.5 });
         break;

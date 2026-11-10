@@ -9,6 +9,7 @@ import {
 } from './models.js';
 import { FloatText, Lightning, Particles, Rings } from './effects.js';
 import { coverageMap } from '../sim/coverage.js';
+import { Weather } from './weather.js';
 
 const AIR_HEIGHT = 1.15;
 
@@ -94,6 +95,7 @@ export class World {
     this.fireworks = 0;
     this.meteors = [];
 
+    this.weather = new Weather(this);
     this.makeCursorObjects();
     this.setQuality(this.quality);
     this.resize();
@@ -221,6 +223,7 @@ export class World {
     sc.updateProjectionMatrix();
 
     this.buildBoard(theme, hashString(game.level.id));
+    this.weather.load(game.level.theme);
     this.frameCamera();
     this.routeTimer = 0;
     this.routeSparks = [];
@@ -1137,6 +1140,7 @@ export class World {
       }
       this.updateRanges(game);
       this.updateFireworks(dt);
+      this.weather.update(dt, this.onThunder);
       this.updateMeteors(dt);
       this.ambient(dt);
       this.routePreview(dt, game);

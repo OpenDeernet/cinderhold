@@ -1407,6 +1407,18 @@ export class World {
     this.controls.target.add(move);
   }
 
+  // Moves the camera target to a map point, keeping the current angle.
+  lookAt(x, y) {
+    const { x: wx, z: wz } = this.toWorld(x, y);
+    const t = this.controls.target;
+    const dx = wx - t.x;
+    const dz = wz - t.z;
+    t.set(wx, 0, wz);
+    this.camera.position.x += dx;
+    this.camera.position.z += dz;
+    this.clampTarget();
+  }
+
   // Gamepad camera: yaw around the target and move in or out.
   orbit(yaw, zoom) {
     const t = this.controls.target;

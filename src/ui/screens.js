@@ -605,6 +605,7 @@ export class Screens {
         row('R', 'Show every tower\'s range'),
         row('H', 'Placement heatmap while building'),
         row('G', 'Toggle fullscreen'),
+        row('O', 'Photo mode (Enter saves a picture)'),
         row('Space', 'Send the next wave (early waves pay a bonus)'),
         row('U / X / T', 'Upgrade / sell / change targeting of the selected tower'),
         row('F', 'Cycle game speed'),

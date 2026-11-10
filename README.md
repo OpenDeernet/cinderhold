@@ -80,6 +80,7 @@ browser's localStorage.
 | F | Cycle game speed |
 | Esc / P | Cancel, deselect, pause |
 | G | Toggle fullscreen |
+| O | Photo mode; Enter saves a PNG of the view |
 | M | Mute |
 
 Touch: tap to build or select, one-finger drag pans, two fingers zoom and

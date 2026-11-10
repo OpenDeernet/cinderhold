@@ -77,6 +77,7 @@ const actions = {
     });
   },
   quitToMenu: (where = 'levels') => {
+    setPhotoMode(false);
     if (session?.replay) where = 'replays';
     if (session && !session.demo && !session.recorded) recordResult(true);
     hud.detach();
@@ -467,6 +468,12 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   if (!session || session.demo) return;
+  if (photo || e.code === 'KeyO') {
+    if (e.code === 'KeyO' || e.code === 'Escape') setPhotoMode(!photo);
+    else if (e.code === 'Enter') savePicture();
+    else if (PAN_KEYS[e.code]) world.setPanKey(PAN_KEYS[e.code], true);
+    return;
+  }
   if (PAN_KEYS[e.code] && !session.paused) {
     world.setPanKey(PAN_KEYS[e.code], true);
     e.preventDefault();
@@ -556,6 +563,43 @@ canvas.addEventListener('webglcontextlost', (e) => {
   e.preventDefault();
   if (session && !session.demo) setPaused(true);
 });
+
+// ---------------------------------------------------------------- photo mode
+
+let photo = null;
+
+function setPhotoMode(on) {
+  if (!session || session.demo || !!photo === on) return;
+  document.body.classList.toggle('photo-mode', on);
+  if (on) {
+    setBuild(null);
+    select(null);
+    photo = document.createElement('div');
+    photo.className = 'photo-bar';
+    const shoot = document.createElement('button');
+    shoot.className = 'btn small primary';
+    shoot.textContent = 'Save picture (Enter)';
+    shoot.addEventListener('click', savePicture);
+    const exit = document.createElement('button');
+    exit.className = 'btn small';
+    exit.textContent = 'Exit (O)';
+    exit.addEventListener('click', () => setPhotoMode(false));
+    photo.append('Photo mode', shoot, exit);
+    document.body.appendChild(photo);
+  } else {
+    photo.remove();
+    photo = null;
+  }
+}
+
+function savePicture() {
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  a.download = `cinderhold-${session.game.level.id.replace(/[^a-z0-9]+/gi, '-')}-${stamp}.png`;
+  a.href = world.capture();
+  a.click();
+  audio.play('click');
+}
 
 // ---------------------------------------------------------------- gamepad
 

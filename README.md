@@ -1,5 +1,7 @@
 # Cinderhold
 
+[![CI](https://github.com/integral0909/cinderhold/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/integral0909/cinderhold/actions/workflows/ci.yml)
+
 A 3D tower-defense game for the browser, built with [Three.js](https://threejs.org/).
 
 The ash tide is rolling down the valley. Build towers along the roads, break the
@@ -164,9 +166,10 @@ npm run ci          # run the pipeline
 npm run ci:report   # run it and post the result to GitHub as the ci/local status
 ```
 
-`ci:report` gives commits a check mark without GitHub-hosted runners. It needs
-a token with repo access in `GITHUB_TOKEN` (or a stored git credential) and
-refuses to run on a dirty working tree.
+`ci:report` is a fallback for when GitHub-hosted runners are unavailable: it
+posts a `ci/local` commit status instead. It needs a token with repo access in
+`GITHUB_TOKEN` (or a stored git credential) and refuses to run on a dirty
+working tree.
 
 ## License
 

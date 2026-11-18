@@ -2,6 +2,14 @@ import { LEVELS } from './sim/data/levels.js';
 import { PERKS } from './sim/data/perks.js';
 
 const KEY = 'cinderhold.save.v1';
+
+// Unique ids for maps and replays: time, a per-session counter (several can
+// be made in the same millisecond) and a random tail (two tabs, one save).
+let idSeq = 0;
+function newId(prefix) {
+  idSeq = (idSeq + 1) % 1296;
+  return `${prefix}${Date.now().toString(36)}${idSeq.toString(36).padStart(2, '0')}${Math.floor(Math.random() * 1296).toString(36)}`;
+}
 const MAX_CUSTOM_MAPS = 40;
 const MAX_REPLAYS = 12;
 const ENDLESS_RUNS = 5;
@@ -227,7 +235,7 @@ export class Save {
   // not stored so they cannot crowd out the rest of the save.
   addReplay(meta, replay) {
     if (JSON.stringify(replay).length > MAX_REPLAY_BYTES) return null;
-    const id = `r${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+    const id = newId('r');
     this.data.replays = [{ ...meta, id, date: Date.now(), replay }, ...this.listReplays()].slice(0, MAX_REPLAYS);
     this.persist();
     return id;
@@ -251,7 +259,7 @@ export class Save {
   // Inserts or updates a map; returns its id.
   saveMap(map) {
     const now = Date.now();
-    const id = map.id || `m${now.toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+    const id = map.id || newId('m');
     const entry = { ...this.getMap(id), ...map, id, rows: [...map.rows], updated: now };
     entry.wins = entry.wins || 0;
     this.data.customMaps = [...this.data.customMaps.filter((m) => m.id !== id), entry];

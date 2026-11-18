@@ -171,6 +171,14 @@ describe('Save', () => {
     expect(s.listMaps()).toHaveLength(40);
   });
 
+  it('never hands out the same id twice, even within one millisecond', () => {
+    const s = new Save();
+    const ids = new Set();
+    for (let i = 0; i < 300; i++) ids.add(s.addReplay({ name: `R${i}` }, { v: 1, log: [] }));
+    for (let i = 0; i < 300; i++) ids.add(s.saveMap({ name: `M${i}`, theme: 'meadow', tier: 'gentle', waves: 10, rows: LEVELS[0].map }));
+    expect(ids.size).toBe(600);
+  });
+
   it('keeps the twelve newest replays and skips huge ones', () => {
     const s = new Save();
     const replay = { v: 1, log: [[0, 'wave']] };

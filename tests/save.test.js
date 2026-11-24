@@ -285,4 +285,67 @@ describe('Save', () => {
     };
     expect(store.get(KEY)).toBe(original);
   });
+
+  it('addReplay recovers by dropping the oldest replay when the first write fails', () => {
+    const s = new Save();
+    s.data.replays = [
+      { id: 'r-old', name: 'old', date: 1, replay: { v: 1, log: [] } },
+      { id: 'r-new', name: 'new', date: 2, replay: { v: 1, log: [] } },
+    ];
+    s.persist();
+    let attempts = 0;
+    globalThis.localStorage.setItem = (k, v) => {
+      attempts += 1;
+      if (attempts === 1) {
+        const err = new Error('The quota has been exceeded.');
+        err.name = 'QuotaExceededError';
+        throw err;
+      }
+      store.set(k, String(v));
+    };
+    const id = s.addReplay({ name: 'newest' }, { v: 1, log: [] });
+    expect(id).toBeTruthy();
+    expect(attempts).toBe(2);
+    expect(s.listReplays().map((r) => r.name)).toEqual(['newest', 'new']);
+    expect(JSON.parse(store.get(KEY)).replays.map((r) => r.name).sort()).toEqual(['new', 'newest']);
+    expect(s.persistHint).toBeNull();
+  });
+
+  it('addReplay uses the main.js toast hook and keeps memory and stored data if the retry fails', () => {
+    const s = new Save();
+    s.recordWin(LEVELS[0].id, 3, 'normal');
+    s.data.replays = [
+      { id: 'r-old', name: 'old', date: 1, replay: { v: 1, log: [] } },
+      { id: 'r-new', name: 'new', date: 2, replay: { v: 1, log: [] } },
+    ];
+    s.persist();
+    const original = store.get(KEY);
+    const toasts = [];
+    const hud = { toast: (msg) => toasts.push(msg) };
+    // Same assignment as src/main.js after Hud is created.
+    s.onPersistFailureHint = (msg) => hud.toast(msg);
+    globalThis.localStorage.setItem = () => {
+      const err = new Error('The quota has been exceeded.');
+      err.name = 'QuotaExceededError';
+      throw err;
+    };
+    const id = s.addReplay({ name: 'newest' }, { v: 1, log: [] });
+    expect(id).toBeTruthy();
+    expect(toasts).toEqual([s.persistHint]);
+    expect(s.persistHint).toMatch(/Export save/);
+    expect(s.listReplays().map((r) => r.name).sort()).toEqual(['new', 'newest', 'old']);
+    expect(store.get(KEY)).toBe(original);
+    expect(s.starsEarned()).toBe(3);
+    s.recordWin(LEVELS[0].id, 2, 'normal');
+    expect(toasts).toHaveLength(1);
+  });
+
+  it('main.js wires persist failures to the existing hud.toast after Hud is created', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const url = await import('node:url');
+    const mainPath = path.join(path.dirname(url.fileURLToPath(import.meta.url)), '../src/main.js');
+    const main = fs.readFileSync(mainPath, 'utf8');
+    expect(main).toMatch(/const hud = new Hud\([^;]+;\s*const screens = new Screens\([^;]+;\s*hud\.detach\(\);\s*save\.onPersistFailureHint = \(msg\) => hud\.toast\(msg\);/s);
+  });
 });

@@ -213,4 +213,76 @@ describe('Save', () => {
     expect(s.recordEndless(LEVELS[0].id, 8)).toBe(false);
     expect(s.level(LEVELS[0].id).bestEndless).toBe(12);
   });
+
+  it('drops the oldest replay and retries once when storage is full', () => {
+    const s = new Save();
+    s.data.replays = [
+      { id: 'r-old', name: 'old', date: 1, replay: { v: 1, log: [] } },
+      { id: 'r-new', name: 'new', date: 2, replay: { v: 1, log: [] } },
+    ];
+    let attempts = 0;
+    globalThis.localStorage.setItem = (k, v) => {
+      attempts += 1;
+      if (attempts === 1) {
+        const err = new Error('The quota has been exceeded.');
+        err.name = 'QuotaExceededError';
+        throw err;
+      }
+      store.set(k, String(v));
+    };
+    const result = s.persist();
+    expect(result).toEqual({ ok: true, recovered: true });
+    expect(s.listReplays().map((r) => r.name)).toEqual(['new']);
+    expect(JSON.parse(store.get(KEY)).replays.map((r) => r.name)).toEqual(['new']);
+    expect(s.persistHint).toBeNull();
+  });
+
+  it('reports a one-time export hint and does not destroy memory or stored data if the retry also fails', () => {
+    const s = new Save();
+    s.recordWin(LEVELS[0].id, 3, 'normal');
+    const original = store.get(KEY);
+    s.data.replays = [
+      { id: 'r-old', name: 'old', date: 1, replay: { v: 1, log: [] } },
+      { id: 'r-new', name: 'new', date: 2, replay: { v: 1, log: [] } },
+    ];
+    const hints = [];
+    s.onPersistFailureHint = (msg) => hints.push(msg);
+    globalThis.localStorage.setItem = () => {
+      const err = new Error('The quota has been exceeded.');
+      err.name = 'QuotaExceededError';
+      throw err;
+    };
+    const first = s.persist();
+    expect(first.ok).toBe(false);
+    expect(first.hint).toMatch(/Export save/);
+    expect(hints).toEqual([first.hint]);
+    expect(s.listReplays().map((r) => r.name).sort()).toEqual(['new', 'old']);
+    expect(store.get(KEY)).toBe(original);
+    expect(s.starsEarned()).toBe(3);
+    const second = s.persist();
+    expect(second).toEqual({ ok: false });
+    expect(hints).toHaveLength(1);
+  });
+
+  it('still does not throw when storage is unavailable, but reports the write failure', () => {
+    const s = new Save();
+    s.recordWin(LEVELS[0].id, 3, 'normal');
+    const original = store.get(KEY);
+    globalThis.localStorage = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('denied');
+      },
+    };
+    expect(() => s.recordWin(LEVELS[0].id, 2, 'normal')).not.toThrow();
+    expect(s.persist().ok).toBe(false);
+    // Previous stored save is untouched because the later writes never landed.
+    globalThis.localStorage = {
+      getItem: (k) => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => store.set(k, String(v)),
+    };
+    expect(store.get(KEY)).toBe(original);
+  });
 });
